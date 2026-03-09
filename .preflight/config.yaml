@@ -1,0 +1,7 @@
+version: 1
+created: 2026-03-09
+workspace_name: forge-project-tracker
+project_defaults:
+  tier: 2
+  track: gsd
+memory_path: .memory/
