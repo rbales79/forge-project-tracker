@@ -1,0 +1,24 @@
+name: "devlog"
+status: ideation
+active_agent: ideation
+current_phase: "research"
+created: 2026-03-17
+updated: 2026-03-17
+description: "AI-assisted TUI-based git log aggregator. Works against single or many repos. Scan and adopt repos. AI-enabled but not a blocker."
+repo: ""
+pr: ""
+tier: 2
+track: gsd
+tags: [go, tui, cli, ai-optional]
+planning:
+  depth: low
+  artifacts:
+    - .planning/PROJECT.md
+    - .planning/HANDOFF.md
+    - .planning/research/market-research.md
+    - .planning/research/synthesis.md
+    - .planning/risks-and-considerations.md
+    - .planning/memory.md
+    - .planning/phase-1-context.md
+    - .planning/phase-2-context.md
+    - .planning/phase-3-context.md
