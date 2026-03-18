@@ -1,10 +1,10 @@
 # Forge SDLC -- Board
-*Updated: 2026-03-17 20:15*
+*Updated: 2026-03-17 20:25*
 
 ## Active
 | Project | Stage | Phase | Agent | Next Action |
 |---------|-------|-------|-------|-------------|
-| devlog | building | Phase 1 — Core Shell | builder | ECC Build in progress |
+| devlog | building | Build complete | manager | Quality gate approval |
 
 ## Pipeline
 | Project | Stage | Blocked By |

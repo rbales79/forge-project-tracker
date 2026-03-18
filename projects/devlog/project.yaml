@@ -1,12 +1,12 @@
 name: "devlog"
 status: building
-active_agent: builder
-current_phase: "Phase 1 — Core Shell"
+active_agent: manager
+current_phase: "Build complete — awaiting quality gate"
 created: 2026-03-17
 updated: 2026-03-17
 description: "AI-assisted TUI-based git log aggregator. Works against single or many repos. Scan and adopt repos. AI-enabled but not a blocker."
 repo: "https://github.com/rbales79/devlog"
-pr: ""
+pr: "https://github.com/rbales79/devlog/pull/2"
 tier: 2
 track: gsd
 tags: [go, tui, cli, ai-optional]
