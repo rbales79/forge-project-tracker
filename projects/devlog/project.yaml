@@ -1,12 +1,12 @@
 name: "devlog"
-status: quality
-active_agent: manager
-current_phase: "Quality passed — ready to ship"
+status: shipped
+active_agent: none
+current_phase: ""
 created: 2026-03-17
 updated: 2026-03-17
 description: "AI-assisted TUI-based git log aggregator. Works against single or many repos. Scan and adopt repos. AI-enabled but not a blocker."
 repo: "https://github.com/rbales79/devlog"
-pr: "https://github.com/rbales79/devlog/pull/2"
+pr: ""
 tier: 2
 track: gsd
 tags: [go, tui, cli, ai-optional]
