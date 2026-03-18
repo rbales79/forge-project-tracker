@@ -1,11 +1,11 @@
 name: "devlog"
-status: ideation
-active_agent: ideation
-current_phase: "research"
+status: building
+active_agent: builder
+current_phase: "Phase 1 — Core Shell"
 created: 2026-03-17
 updated: 2026-03-17
 description: "AI-assisted TUI-based git log aggregator. Works against single or many repos. Scan and adopt repos. AI-enabled but not a blocker."
-repo: ""
+repo: "https://github.com/rbales79/devlog"
 pr: ""
 tier: 2
 track: gsd
