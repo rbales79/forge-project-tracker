@@ -1,7 +1,7 @@
 name: "devlog"
-status: building
+status: quality
 active_agent: manager
-current_phase: "Build complete — awaiting quality gate"
+current_phase: "Quality passed — ready to ship"
 created: 2026-03-17
 updated: 2026-03-17
 description: "AI-assisted TUI-based git log aggregator. Works against single or many repos. Scan and adopt repos. AI-enabled but not a blocker."
