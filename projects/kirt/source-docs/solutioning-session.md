@@ -1,3 +1,5 @@
+> **STATUS: HISTORICAL** — All items from this session have been resolved and merged into `kirt-spec-seed.md`. This document is retained for decision archaeology only. Do not treat any items here as open or blocking.
+
 # KIRT — Gough/R Solutioning Session
 
 > Items extracted from the spec seed and roadmap analysis that require design sessions before they can be locked in. Once resolved, decisions feed back into `kirt-spec-seed.md`.

@@ -11,7 +11,7 @@
 
 ## Artifacts Produced
 
-- [x] `HANDOFF.md` — GSD `--auto` format, all 10 required sections, 60 requirements (R01–R60), 27 deferred items, 5 non-goals, 29 locked decisions, 5-layer build order, 3 personas
+- [x] `HANDOFF.md` — GSD `--auto` format, all required sections, 62 requirements (R01–R62), 27 deferred items, 5 non-goals, 29 locked decisions, 5-layer build order, 3 personas
 - [x] `phase-1-context.md` — Foundation Integration & Project Skeleton
 - [x] `phase-2-context.md` — Core Search & Document Management
 - [x] `phase-3-context.md` — Content Generation Pipeline
@@ -29,7 +29,7 @@
 
 - HANDOFF.md sections: ✅ PASS — all 10 required headings present
 - Phase context files: ✅ PASS — all 5 files, all 6 required sections each
-- Requirements coverage: ✅ PASS — R01–R60 all appear in both HANDOFF.md and phase contexts
+- Requirements coverage: ✅ PASS — R01–R62 all appear in both HANDOFF.md and phase contexts
 - Risk cross-reference: ✅ PASS — RISK IDs in synthesis.md all defined in risks-and-considerations.md
 - User Personas: ✅ PASS — 3 personas with core tasks mapped to requirement IDs
 
@@ -92,12 +92,13 @@ Permanently out of scope:
 ## Notes for Dev
 
 **Critical pre-build actions (before code starts):**
-1. Offerings catalog v0.1 extraction — Jonathan. Assign owner, set deadline. Blocks white space, cross-sell, Engagement Prep precision.
-2. Discovery question taxonomy formalization — 200+ questions into tree structure. Do during Phase 2 as content work.
-3. Demo data extraction — 4 accounts across the matrix. Gap analysis via `demo-data-requirements.md` validation checklists.
+1. Offerings catalog v0.1 — Roy. Will be available (real or synthetic) for V1. Blocks white space, cross-sell, Engagement Prep precision.
+2. Discovery question taxonomy — Done. Available in `demo-data/config/discovery-questions.json`.
+3. Demo data preparation — 4 accounts across the matrix. Gap analysis via `demo-data-requirements.md` validation checklists.
 4. Foundation v3 access confirmed — endpoint URL, API credentials, Weaviate access, Redis Streams access.
 5. LLM provider credentials confirmed — Gemini API key, Azure OpenAI endpoint, AWS Bedrock credentials.
-6. Entra app registration for KIRT — needs `Sites.ReadWrite.All` for SP write-back, Graph API access for auth.
+6. Entra app registration for KIRT — needs `Sites.ReadWrite.All` for SP write-back, Graph API access for auth. SP test site: forgecf.sharepoint.com.
+7. CVPS3 provisioning — Contabo VPS for Docker deployment.
 
 **Architecture note:** Foundation reference POC (9 layers, 179 passing tests, MCP-native Django monolith) is in the Forge ecosystem. Read it before Phase 1. Mirror the structure.
 

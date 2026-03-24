@@ -1,6 +1,6 @@
 # PreFlight Handoff — KIRT
 
-> **Intake Synthesis Mode.** All decisions extracted from `kirt-spec-seed.md` and `demo-data-requirements.md` (2026-03-24). Decisions marked `[FROM SOURCE]` are locked — treat as if confirmed in Q&A. No decisions were deferred or overridden during synthesis.
+> **Intake Synthesis Mode.** All decisions extracted from `kirt-spec-seed.md` and `demo-data-requirements.md` (2026-03-24). Decisions marked `[FROM SOURCE]` are locked — treat as if confirmed in Q&A. No decisions were deferred or overridden during synthesis. All solutioning session items resolved and merged into spec seed.
 
 ---
 
@@ -52,7 +52,7 @@ Foundation v3.0 provides 13 REST API endpoints that KIRT depends on:
 Foundation reference POC: 9 layers, 179 tests passing, MCP-native architecture, monolith design.
 
 ### Source of Truth Model
-- **SharePoint** = document source-of-truth (files live here, never modified by Foundation/KIRT)
+- **SharePoint** = document source-of-truth (source files live here, never modified by Foundation/KIRT. KIRT-generated output files in designated folders are updated in place.)
 - **Foundation** = raw data source-of-truth (ingested, normalized, searchable)
 - **KIRT** = intelligence source-of-truth (enrichments, classifications, scores, generated insights, write-back deliverables)
 
@@ -68,13 +68,14 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 - Django backend, MCP-native architecture — consistent with Foundation reference POC.
 - Multi-provider LLM abstraction from day one: Gemini, Azure OpenAI, AWS Bedrock + any OpenAI-compatible endpoint. Zero provider-specific code in the application. Provider selection is admin-configurable.
 - Weaviate is the confirmed vector DB for V1. Evaluate alternatives only if Weaviate proves insufficient — no preemptive replacement.
-- SP files are **never** modified by Foundation or KIRT. KIRT writes new files to SP (deliverables); it does not edit source files unless the user explicitly initiates a write-back to a specific canonical source_ref.
+- **Source** SP files are never modified by Foundation or KIRT. KIRT writes deliverables to designated output folders. Generated output files are updated in place on regeneration — SP versioning preserves previous versions automatically. KIRT does not edit source files in their original locations.
+- **Input/output path separation is enforced at admin config time.** Output folder must not equal, be a parent of, or be a child of any configured input source path. Same SP site with different folders is allowed (e.g., `/Acme/Documents/` input, `/Acme/KIRT-Output/` output). This prevents KIRT from re-ingesting its own output and ensures source vs. generated content is always distinguishable by folder structure.
 - KIRT does not maintain its own document store. All document storage routes through Foundation via `POST /v1/ingest/`.
 - Permission inheritance is strict: KIRT never surfaces a document the user couldn't access in its source system. Enforced pre-query in Foundation, not post-fetch in KIRT.
 
 ### Scope Constraints `[FROM SOURCE]`
 - **Single-tenant V1.** Internal Pellera deployment only. Foundation's `tenant_id` scoping supports future multi-tenancy without rewrite.
-- **Single AD group, full access V1.** Bronze/silver/gold tier enforcement is V2+.
+- **Single AD group, full access V1.** Tier enforcement is V2+.
 - **Web app only.** Teams tab is future (iframe wrapper). No native app.
 - **Generation and admin are desktop-only in V1.** Mobile: read flows (search, view briefs) via responsive Tailwind design.
 - **No Foundation v4 features.** Don't design around automated reconciliation, Spark query engine, advanced lineage, or OpenMetadata.
@@ -87,8 +88,8 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 
 ### Data Constraints `[FROM SOURCE]`
 - No seed data in Foundation today. Demo data (4+ accounts) must be ingested before end-to-end testing.
-- Offerings catalog v0.1 does not exist yet — highest content dependency, must be created from PPT decks and practice collateral before demo.
-- Discovery question taxonomy: 200+ questions across 20+ variants. May exist as informal notes — structured taxonomy file must be created during build.
+- Offerings catalog v0.1: will be available (real or synthetic) for V1. Features degrade gracefully without it.
+- Discovery question taxonomy: 200+ questions structured as business→industry→solution tree, available in `demo-data/config/discovery-questions.json`.
 
 ---
 
@@ -134,63 +135,65 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 - **R27** Works without prior Phase 1 completion — generates from available context
 
 #### Meeting Summary & Follow-Up
-- **R28** Upload meeting notes → generate: polished recap, structured action items (with owners/dates), draft follow-up email, account intelligence update
-- **R29** Works from notes alone, enriched by existing account context
-- **R30** Lowest-friction entry point: single upload → something sendable
+- **R28** Upload meeting notes → generate polished recap (prose, not bullet lists)
+- **R29** Structured action items extracted from notes (with owners and dates)
+- **R30** Draft follow-up email suitable for sending to client
+- **R31** Account intelligence update: pain points, competitive mentions, stakeholder signals extracted and fed back into account context via Foundation annotations
+- **R32** Works from notes alone, enriched by existing account context. Lowest-friction entry point: single upload → something sendable
 
 #### Client Deliverable Generation
-- **R31** Input: company name + keywords → client-ready documentation with account history
-- **R32** Template pulled from SP (via Foundation's template canonical)
-- **R33** Research run → LLM generation → SP write-back → provenance summary shown to user
+- **R33** Input: company name + keywords → client-ready documentation with account history. All templates use Pellera format (template-driven generation from `demo-data/templates/`).
+- **R34** Template pulled from SP (via Foundation's template canonical)
+- **R35** Research run → LLM generation → SP write-back → provenance summary shown to user
 
 #### Cross-Sell Recommendations
-- **R34** Pattern-based suggestions from engagement history: "accounts like this also bought..."
-- **R35** Triggered after data ingestion or meeting note upload
-- **R36** Requires offerings catalog as reference frame (less precise without it, still generates)
+- **R36** Pattern-based suggestions from engagement history: "accounts like this also bought..."
+- **R37** Triggered after data ingestion or meeting note upload
+- **R38** Requires offerings catalog as reference frame (less precise without it, still generates)
 
 #### Document Generation Infrastructure
-- **R37** Generation progress: real-time indicators via Foundation job API; "Still working — pulling data from N sources" if >60 seconds
-- **R38** Human-in-the-loop editing: inline edit, section regeneration
-- **R39** Prompt-level feedback learning: store edited outputs, use as few-shot context for future generation for same account/type
-- **R40** Concurrent generation handling: both complete, both write to SP, KIRT surfaces "2 versions generated" indicator, user picks winner
-- **R41** Content versioning badge: "Generated v3, last updated 2026-03-20"
-- **R42** SP write-back conventions: configurable output folders, `[Client]-[DocType]-[Date].docx` naming
-- **R43** Write-back is explicit and user-initiated with confirmation step
+- **R39** Generation progress: real-time indicators via Foundation job API; "Still working — pulling data from N sources" if >60 seconds
+- **R40** Human-in-the-loop editing: inline edit, section regeneration
+- **R41** Prompt-level feedback learning: store edited outputs, use as few-shot context for future generation for same account/type
+- **R42** Concurrent generation handling: both complete, both write to SP, KIRT surfaces "2 versions generated" indicator, user picks winner
+- **R43** Content versioning badge: "Generated v3, last updated 2026-03-20"
+- **R44** SP write-back conventions: configurable output folders, `[Client]-[DocType]-[Date].docx` naming
+- **R45** Write-back is explicit and user-initiated with confirmation step
 
 #### SAF Features
-- **R44** SAF progress tracking as optional overlay for EA users (not default view)
-- **R45** Growth scoring: 5 dimensions (revenue, strategic value, relationship depth, engagement frequency, white space size), equal weights (20% each) in V1, tunable via admin
-- **R46** Manual tier override for growth scoring
+- **R46** SAF progress tracking as optional overlay for EA users (not default view)
+- **R47** Growth scoring: 5 dimensions (revenue, strategic value, relationship depth, engagement frequency, white space size), equal weights (20% each) in V1, tunable via admin
+- **R48** Manual tier override for growth scoring
 
 #### Duplicate/Variant Management
-- **R47** Canonical document selection via admin-configurable location-ranking
-- **R48** User can set a source_ref as canonical (writes `is_canonical` flag to Foundation)
-- **R49** User can mark non-canonical copies as archived (Foundation `status: archived`, SP file untouched)
+- **R49** Canonical document selection via admin-configurable location-ranking
+- **R50** User can set a source_ref as canonical (writes `is_canonical` flag to Foundation)
+- **R51** User can mark non-canonical copies as archived (Foundation `status: archived`, SP file untouched)
 
 #### Admin Configuration
-- **R50** Admin-configurable settings (without code changes): SP input sources, SP output folders, crawl schedules, location-ranking, scoring weights, LLM provider/model, offerings catalog
-- **R51** Admin-triggered GDPR purge with annotation cleanup
-- **R52** Output vs. input separation: source documents and KIRT-generated deliverables go to separate SP locations
+- **R52** Admin-configurable settings (without code changes): SP input sources, SP output folders, crawl schedules, location-ranking, scoring weights, LLM provider/model, offerings catalog
+- **R53** Admin-triggered GDPR purge with annotation cleanup
+- **R54** Output vs. input separation: source documents and KIRT-generated deliverables go to separate SP locations
 
 #### Observability
-- **R53** Health endpoint `/health/`: KIRT app health + Foundation connectivity
-- **R54** Error tracking: Django error logging + Sentry (non-negotiable)
-- **R55** Basic usage logging: who searched, who generated, when
+- **R55** Health endpoint `/health/`: KIRT app health + Foundation connectivity
+- **R56** Error tracking: Django error logging + Sentry (non-negotiable)
+- **R57** Basic usage logging: who searched, who generated, when
 
 #### Responsive UI
-- **R56** Mobile read access: search, view Account Brief, view Engagement Prep (responsive via Tailwind)
-- **R57** Task-oriented UI: "What do you need?" — not phase-oriented
-- **R58** Generation and admin: desktop-only in V1
+- **R58** Mobile read access: search, view Account Brief, view Engagement Prep (responsive via Tailwind)
+- **R59** Task-oriented UI: "What do you need?" — not phase-oriented
+- **R60** Generation and admin: desktop-only in V1
 
 #### Error Handling
-- **R59** Error state shown when Foundation is unavailable
-- **R60** Graceful degradation on every feature — works with partial data, communicates what's missing
+- **R61** Error state shown when Foundation is unavailable
+- **R62** Graceful degradation on every feature — works with partial data, communicates what's missing
 
 ### Deferred (V2+)
 
 - **D01** Near-duplicate detection (fuzzy matching) — V2
 - **D02** Cross-format dedup (docx ↔ pdf) — V2
-- **D03** Bronze/silver/gold access tiers (AD-group-to-role mapping) — V2
+- **D03** Role-based access tiers (AD-group-to-role mapping) — V2
 - **D04** Per-account filtering (AE sees only their accounts, requires SF ownership) — V2
 - **D05** Opportunity scoring (ML-informed, transcript-based) — V2
 - **D06** Offering maturity gate — V2
@@ -218,7 +221,7 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 
 ### Non-Goals (explicitly out of scope, permanent)
 - KIRT is not a CRM replacement. SF stays as system of record for structured CRM data.
-- KIRT does not edit source files in SharePoint. It writes new deliverable files only.
+- KIRT does not edit source files in SharePoint. It writes deliverables to output folders and updates them in place on regeneration.
 - KIRT does not maintain a document store. Foundation is the single storage layer.
 - KIRT does not surface intermediate research/generation process to users. Users see output only.
 - KIRT does not decide which document copy is authoritative. Users decide, KIRT surfaces the data.
@@ -235,13 +238,18 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 | Storage | Apache Iceberg / Parquet on Azure Blob | Research/scoring intermediates only. SP is the document source of truth. |
 | Auth | AD/SSO via Graph API | M365/Entra identity. JWT claims to Foundation on every request. |
 | Cloud target | Azure (target), Contabo (current Foundation) | Foundation on Contabo; KIRT targets Azure from design. Migration is post-V1. |
+| Deployment | Docker on Contabo CVPS3, CI/CD via GitHub Actions | V1 deployment target. Azure migration is future. |
+| Task queue | Celery + Redis | Async LLM generation, classification, cross-sell. |
+| Real-time | Redis Streams (backend events) + SSE (frontend push) | Backend events from Foundation; SSE pushes updates to browser. |
+| SF data | Synthetic CSV for demo, real CSV reports future, API V4+ | CSV import mechanism in Phase 2. Direct API access is V4+. |
+| SharePoint test site | forgecf.sharepoint.com | Test/demo site for SP integration. Entra app registration created when needed. |
 | LLM strategy | Multi-provider abstraction. No provider-specific code. | Gemini, Azure OpenAI, AWS Bedrock + OpenAI-compatible. Admin-configurable. |
 | LLM approved providers | Gemini, Azure OpenAI, AWS Bedrock | Approved by Pellera. Any OpenAI-compatible endpoint also supported. |
 | Form factor | Web app, responsive | Teams tab is future. No native app. Generation/admin: desktop-only V1. |
 | Tenancy | Single-tenant V1 | Internal Pellera deployment only. Foundation `tenant_id` ready for future. |
-| Access control V1 | Single AD group, full access | Bronze/silver/gold is V2+. |
+| Access control V1 | Single AD group, full access | Tier enforcement is V2+. |
 | Document ownership | Foundation owns storage | KIRT routes uploads via `POST /v1/ingest/`. No KIRT-owned document store. |
-| SP write policy | Write-back is explicit, user-initiated | No automatic SP edits. Confirmation required. |
+| SP write policy | Write-back is explicit, user-initiated | No automatic SP writes. Confirmation required. Output files updated in place on regeneration (SP versioning preserves history). |
 | Permission model | SP permission inheritance. Strict. | Foundation enforces at pre-query time. KIRT never post-filters. |
 | Duplicate default | 1 result per document, dedup invisible | "N copies" badge accessible. V1: content hash exact dedup. V2: fuzzy. |
 | Canonical selection | Admin-configurable location-ranking | Not a hardcoded SP hierarchy. User can override. |
@@ -251,8 +259,8 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 | Feedback learning V1 | Prompt-level. Store edited outputs as few-shot context. | RAG loop is V2. Fine-tuning is V3+. |
 | Concurrent generation | Both complete. Both write SP. User picks winner. | Content merging is V3+. |
 | Error state | Show error state when Foundation unavailable | No cached/degraded mode until V2. |
-| Offerings catalog | V0.1 extracted from PPT/collateral. Best-effort. | Does not exist yet — highest content dependency. Must be created pre-demo. |
-| Discovery questions | Full 200+ question set. Tree structure (business→industry→solution). | May exist as notes — formalize during build. Required for Engagement Prep. |
+| Offerings catalog | V0.1 real or synthetic. Best-effort. | Will be available for V1 demo. Features degrade gracefully without it. |
+| Discovery questions | Full 200+ question set. Tree structure (business→industry→solution). | Available in `demo-data/config/discovery-questions.json`. |
 | Demo data | 4 real accounts, anonymized. Public data gathered at runtime. | Matrix: public existing, public prospect, private existing, private prospect. |
 | Notifications V1 | In-app badges and dashboard indicators only | Email/push is V2. |
 | Foundation version | V3.0 only. No V4 features. | V4 targets land before KIRT V2. |
@@ -314,9 +322,9 @@ Foundation POC architecture (MCP-native, Django monolith, 179 passing tests) is 
 
 | Risk ID | Risk | Severity | Category | Status |
 |---------|------|----------|----------|--------|
-| RISK-01 | Offerings catalog doesn't exist | CRITICAL | Dependency | Mitigated: v0.1 extraction from PPT/collateral before build |
+| RISK-01 | Offerings catalog quality | MEDIUM | Dependency | Mitigated: will be available (real or synthetic) for V1 |
 | RISK-02 | Foundation availability for testing | HIGH | Dependency | Mitigated: mock Foundation API for unit tests; integration tests against live v3 |
-| RISK-03 | Discovery question taxonomy as informal notes | HIGH | Dependency | Mitigated: formalize taxonomy during Phase 2; unblocks Engagement Prep |
+| RISK-03 | Discovery question taxonomy | RESOLVED | Dependency | Resolved: structured taxonomy generated in `demo-data/config/discovery-questions.json` |
 | RISK-04 | LLM generation quality below 80-90% threshold | HIGH | Technical | Mitigated: few-shot examples from prior edits; graceful degradation messaging |
 | RISK-05 | SP permission enforcement gaps | HIGH | Security | Mitigated: pre-query enforcement in Foundation; integration test required |
 | RISK-06 | MSA opt-out enforcement gap | HIGH | Compliance | Mitigated: `ai_processing_allowed` flag checked at every LLM pipeline entry point |
@@ -331,7 +339,15 @@ See `risks-and-considerations.md` for full risk detail (RISK-01 through RISK-15)
 
 ---
 
-## Complexity Assessment
+## Execution Guide
+
+### Complexity Rating
+
+- **Level:** Complex
+- **Recommended Path:** Full GSD
+- **Rationale:** Multi-service architecture, 4+ external integrations, 3 user modes, compliance requirements (GDPR, MSA opt-out), and 20K+ line codebase require structured phase management.
+
+**Complexity Signals:**
 
 | Signal | Level | Detail |
 |--------|-------|--------|
@@ -343,68 +359,105 @@ See `risks-and-considerations.md` for full risk detail (RISK-01 through RISK-15)
 | Technology novelty | Moderate | MCP-native Django is new pattern; Weaviate integration is well-documented |
 | Data complexity | Complex | Multiple stores (Weaviate, Iceberg, Redis, SP, SF CSV), complex schema, permission enforcement |
 | User types | Complex | 3 user modes (Full SAF, On-Demand, Consumer) + Admin |
-| Deployment model | Moderate | Single-tenant V1; Azure target well-defined |
+| Deployment model | Moderate | Single-tenant V1; Docker on Contabo CVPS3, CI/CD via GitHub Actions |
 | Real-time requirements | Moderate | Redis Streams events, job progress tracking, in-app notification badges |
-
-**Overall: Complex. Recommended path: Full GSD**
-
-Rationale: Multi-service architecture, 4+ external integrations, 3 user modes with different permission levels, 20K+ line codebase, parallel frontend/backend workstreams, and compliance requirements (GDPR, MSA opt-out) all require structured phase management.
-
----
-
-## Execution Guide
-
-> For lightweight path consumers. GSD ignores this section and derives its own phase structure.
 
 ### Build Order
 
-**Layer 1 — Foundation Integration & Project Skeleton**
-- Django project setup (MCP-native, mirroring Foundation POC structure)
-- Foundation API client (all 13 endpoints, typed, tested)
-- AD/SSO auth via Graph API; JWT middleware
-- Health endpoint `/health/`
-- Error tracking (Sentry)
-- Basic usage logging
-- Local development with mock Foundation API responses
+Build these layers in sequence. Each layer depends on the one above it.
 
-**Layer 2 — Core Search & Document Management**
-- Hybrid search (BM25 + semantic) via Foundation query API
-- Structured filter support (doc_type, date, client, author, status)
-- Deduplication (content hash, 1-result default, "N copies" badge)
-- Freshness indicator (>30 days flag)
-- Search result ranking (knowledge hierarchy)
-- Document upload → Foundation ingest → auto-classification
-- Job progress tracking
+1. **Foundation Integration & Project Skeleton**
+   - Django project setup (MCP-native, mirroring Foundation POC structure)
+   - Foundation API client (all 13 endpoints, typed, tested)
+   - AD/SSO auth via Graph API; JWT middleware
+   - Health endpoint `/health/`, error tracking (Sentry), basic usage logging
+   - Local development with mock Foundation API responses
+   - Docker deployment setup (Dockerfile, docker-compose.yml)
+   - CI/CD pipeline skeleton (GitHub Actions → Contabo CVPS3)
+   - Celery + Redis task queue setup
+   - SSE endpoint skeleton for real-time push
+   - MSA opt-out flag (`ai_processing_allowed`) check in Foundation API client
+   - Depends on: nothing (foundation layer)
+   - Produces: authenticated, Foundation-connected Django app in Docker with mock API for local testing
 
-**Layer 3 — Content Generation Pipeline**
-- LLM provider abstraction layer (multi-provider, admin-configurable)
-- Account Brief generation (all 9 sections, <60 second target)
-- Data completeness indicators on every generated output
-- Graceful degradation rules (partial data → generates + flags gaps)
-- SP write-back (deliverable → configurable output folder + annotation)
-- Human-in-the-loop editing (inline edit, section regeneration)
-- Prompt-level feedback learning (store edits as few-shot context)
-- Concurrent generation handling
-- Content versioning badge
+2. **Core Search & Document Management**
+   - Hybrid search (BM25 + semantic) via Foundation query API
+   - Structured filter support (doc_type, date, client, author, status)
+   - Deduplication (content hash, 1-result default, "N copies" badge)
+   - Freshness indicator (>30 days flag), search result ranking (knowledge hierarchy)
+   - Document upload → Foundation ingest → auto-classification
+   - SF CSV import mechanism (upload CSV → parse → ingest into Foundation)
+   - Job progress tracking
+   - Depends on: Layer 1 (Foundation API client, auth, mock server)
+   - Produces: working search UI, document upload, classification — users can find and add content
 
-**Layer 4 — Engagement Prep, Meeting Notes & Cross-Sell**
-- Discovery question taxonomy (200+ questions, tree structure)
-- Engagement Prep generation (all sections)
-- Stakeholder map (pre-populated, user-editable)
-- Meeting Summary & Follow-Up (upload → recap + action items + follow-up email)
-- Cross-sell recommendations (pattern-based, offerings catalog)
-- SAF progress overlay (optional, EA users)
-- Growth scoring (5-dimension formula, admin-tunable, manual override)
-- White space grid
+3. **Content Generation Pipeline**
+   - LLM provider abstraction layer (multi-provider, admin-configurable)
+   - Account Brief generation (all 9 sections, <60 second target)
+   - Engagement Prep generation (prior work, stakeholder map, discovery questions, talking points)
+   - Meeting Summary & Follow-Up (upload → recap + action items + follow-up email + intelligence update)
+   - Stakeholder map (pre-populated from SF + prior meetings, user-editable)
+   - Data completeness indicators on every generated output
+   - Graceful degradation rules (partial data → generates + flags gaps)
+   - SP write-back (deliverable → configurable output folder + annotation)
+   - Human-in-the-loop editing (inline edit, section regeneration)
+   - Prompt-level feedback learning (store edits as few-shot context)
+   - Concurrent generation handling, content versioning badge
+   - Public data research pipeline (SEC EDGAR, news, company profiles)
+   - Prompt engineering allocation (prompt design, testing, iteration per generation type)
+   - Error handling for LLM failures (timeout, rate limit, provider unavailable)
+   - Depends on: Layer 2 (search, document access, classification)
+   - Produces: 3 of 5 MVP generation types working (Account Brief, Engagement Prep, Meeting Summary)
 
-**Layer 5 — Admin, Config & Polish**
-- Admin configuration UI (SP sources, output paths, location-ranking, scoring weights, LLM provider, offerings catalog)
-- MSA opt-out enforcement (audit `ai_processing_allowed` at every LLM entry point)
-- Admin-triggered GDPR purge with annotation cleanup
-- In-app notification badges and dashboard indicators
-- Responsive frontend polish (mobile read flows)
-- Demo data ingestion (4-account matrix: public existing, public prospect, private existing, private prospect)
-- Integration testing against live Foundation v3
+4. **Deliverables, Intelligence & Scoring**
+   - Client Deliverable generation (all templates use Pellera format)
+   - Cross-sell recommendations (pattern-based, offerings catalog)
+   - White space grid generation
+   - SAF progress overlay (optional, EA users)
+   - Growth scoring (5-dimension formula, admin-tunable, manual override)
+   - Discovery question taxonomy integration
+   - Depends on: Layer 3 (LLM abstraction, generation pipeline, SP write-back)
+   - Produces: all 5 MVP generation types working, scoring and SAF features active
+
+5. **Admin, Config, Deployment & Polish**
+   - Admin configuration UI (SP sources, output paths, location-ranking, scoring weights, LLM provider, offerings catalog)
+   - MSA opt-out enforcement audit (`ai_processing_allowed` at every LLM entry point)
+   - Admin-triggered GDPR purge with annotation cleanup
+   - In-app notification badges and dashboard indicators
+   - Responsive frontend polish (mobile read flows)
+   - Demo data ingestion (4-account matrix)
+   - Integration testing against live Foundation v3
+   - CI/CD pipeline completion (GitHub Actions → Contabo CVPS3)
+   - Docker production deployment config
+   - Playwright E2E test infrastructure setup
+   - SF CSV import validation (synthetic CSVs for demo)
+   - Depends on: Layer 4 (all features built, all generation types working)
+   - Produces: production-ready, demo-reliable, compliance-audited application
+
+> **Rules:**
+> - Don't start a layer until the layer it depends on compiles/runs.
+> - After completing each layer, verify it works before moving on.
+> - If you need to reorder layers, do it — log the change in BUILD_LOG.md and why.
+
+### Build Log
+
+Maintain `.planning/BUILD_LOG.md` throughout the build. Update it as you complete each layer.
+
+Format per layer:
+```
+## Layer N: <Name> — <COMPLETE/IN PROGRESS/BLOCKED>
+- What was built: <brief summary>
+- Deviations: <None, or what changed from plan and why>
+- Checkpoint: <how you verified this layer works>
+```
+
+> **Rules:**
+> - Update BUILD_LOG.md after completing every layer, not at the end.
+> - If you change something from what HANDOFF specifies — different library,
+>   different data model, reordered layers, dropped a feature — don't stop.
+>   Make the call, log what you changed and why, keep building.
+> - If you add something not in scope, move it to `TODO.md` unless it's
+>   required for a success criterion to pass.
 
 ### Success Criteria (V1 MVP)
 
@@ -428,18 +481,42 @@ Rationale: Multi-service architecture, 4+ external integrations, 3 user modes wi
 - **Security tests:** MSA opt-out enforcement, permission inheritance (no unauthorized document surfacing), GDPR purge cascade.
 - Bugs in Foundation API behavior → file as Foundation repo issues, not KIRT workarounds.
 
-### Scope Enforcement
+### Scope Boundaries
 
-If a task is not in the V1 Requirements Signals Must-Have list, it is deferred. The Deferred list is not v2 scope — it's explicitly not V1 scope. No exceptions without explicit user approval.
+**In scope for this build:** All Must-Have requirements R01–R62 (see Requirements Signals above).
+
+**Explicitly out of scope (do not build, do not refactor toward):** All Deferred items D01–D27, all Non-Goals. If it's not in the Must-Have list, it is deferred. No exceptions without explicit user approval.
+
+> **Rule:** If you discover something mid-build that "should" be added, capture it in `TODO.md` and move on. Ship what's scoped.
+
+### Known Risks to Watch
+
+| Risk | What to Do |
+|------|-----------|
+| Foundation API unavailable | Use mock Foundation server for local dev. Show error state in UI. Don't engineer cached mode. |
+| LLM provider rate limits or timeout | Build retry with exponential backoff. Show "Still working..." progress. Fail gracefully with partial output. |
+| SP write-back permissions fail | Integration test early (Phase 1). Require Graph API `Sites.ReadWrite.All` permission in Entra app. |
+| MSA opt-out content reaches LLM | Audit every LLM entry point in Phase 5. `ai_processing_allowed` check is in Foundation API client from Layer 1. |
+| Offerings catalog not ready | Features degrade gracefully without it. Cross-sell uses engagement patterns. White space shows "catalog not configured." |
+| Demo data quality insufficient | Synthetic data is acceptable. 4-account matrix covers all scenarios. Don't block on real data. |
+| Generation quality below expectations | Allocate prompt engineering time in Layer 3. Store edits as few-shot context. Iterate prompts per generation type. |
+
+> Address mitigations during build, don't defer them.
 
 ### Definition of Done
 
-- All Must-Have requirements (R01–R60) implemented and tested
-- Demo runs 3 consecutive times without intervention
-- 4 demo accounts ingested into Foundation with realistic data coverage
-- Admin settings documented in a config reference
-- Sentry error tracking active
-- No hardcoded LLM providers, SP paths, or scoring weights
+The build is complete when:
+1. All Success Criteria checkboxes are checked
+2. All layers in BUILD_LOG.md show COMPLETE
+3. All Must-Have requirements (R01–R62) implemented and tested
+4. Demo runs 3 consecutive times without intervention
+5. Unit tests pass (`pytest` + `npm test`)
+6. Smoke test passes (Account Brief generation + Meeting Notes upload + Hybrid search end-to-end)
+7. BUILD_LOG.md documents any deviations from this guide
+8. Sentry error tracking active
+9. No hardcoded LLM providers, SP paths, or scoring weights
+
+When all are true, stop. Don't polish, don't refactor, don't add features. If something should be better, add it to `TODO.md`.
 
 ---
 

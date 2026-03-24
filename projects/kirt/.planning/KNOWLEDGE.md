@@ -17,11 +17,26 @@ KIRT is the intelligence layer. Foundation is the data layer. They communicate v
 ### Data Flow Direction
 ```
 Source SP sites/SF CSV/uploads → Foundation ingests → KIRT enriches/generates
-  → Deliverables write to designated SP output folders (never back to source)
+  → Deliverables write to designated SP output folders (updated in place on regeneration, never back to source)
   → Source docs marked stale when superseded (user-initiated archival)
 ```
 
 Input sources and output targets are always separate SP locations. This separation IS the normalization strategy.
+
+### Deployment Architecture
+- **KIRT deployment:** Docker containers on Contabo CVPS3
+- **CI/CD:** GitHub Actions → build → test → deploy to CVPS3
+- **Foundation:** Contabo CVPS1 (data plane) + CVPS2 (app plane)
+- **SP test site:** forgecf.sharepoint.com
+
+### Real-Time Architecture
+- **Backend events:** Redis Streams (`document.ingested` from Foundation, generation completion from KIRT)
+- **Frontend push:** Server-Sent Events (SSE) from Django to React
+- **Pattern:** Django receives Redis Streams event → processes → pushes SSE to connected clients
+
+### Task Queue
+- **Celery + Redis** for async operations: LLM generation, document classification, cross-sell calculation
+- Not used for synchronous user operations (search, page load)
 
 ### Three User Modes
 All features are independently accessible. SAF is a capability model, not a required workflow.
@@ -67,7 +82,7 @@ All features are independently accessible. SAF is a capability model, not a requ
 
 ### Admin Configuration
 - All tunable settings are deployment-configurable without code changes
-- SP input sources, SP output folders, crawl schedules, location-ranking
+- SP input sources, SP output folders (with path overlap validation — output must not equal or overlap with any input path), crawl schedules, location-ranking
 - Scoring weights, LLM provider/model, offerings catalog
 - MSA opt-out flag management, GDPR purge triggers
 
@@ -75,8 +90,7 @@ All features are independently accessible. SAF is a capability model, not a requ
 
 - **Foundation purge does NOT cascade to annotations.** When a source document is purged, KIRT must explicitly delete its own annotations. This is easy to forget and will cause orphaned data.
 - **MSA opt-out flag must be checked before ANY LLM pipeline.** Keyword search is fine, but no summarization, classification, or generation context for opted-out content.
-- **Offerings catalog doesn't exist yet.** Cross-sell, white space, and scoring degrade gracefully without it, but engagement prep question mapping won't work without the taxonomy-to-offering linkage.
-- **Discovery questions may be informal notes.** The 200+ question set may not be in a structured file. May need formalization during build.
+- **Discovery question taxonomy is available.** 200+ questions structured in `demo-data/config/discovery-questions.json` (tree: business → industry → solution).
 - **SP write-back requires explicit user confirmation.** Never silently write to SP.
 - **No seed data in Foundation.** Demo data must be ingested before integration testing.
 - **Weaviate is V1 only.** If relationship traversal performance is insufficient, Neo4j evaluation is the path — but don't preemptively add it.
@@ -87,9 +101,9 @@ All features are independently accessible. SAF is a capability model, not a requ
 |-----------|--------|--------|
 | Foundation v3.0 (13 endpoints) | Live on Contabo | Blocker — no Foundation, no KIRT |
 | AD/SSO test environment | TBD | Blocks auth layer |
-| SP test site (read + write) | TBD | Blocks upload, write-back, source management |
-| Offerings catalog v0.1 | WIP | Degrades cross-sell, white space, scoring |
-| Discovery question taxonomy | Needs formalization | AI-generates from context without it |
+| SP test site (read + write) | Available (forgecf.sharepoint.com) | Entra app registration when needed |
+| Offerings catalog v0.1 | In progress | Will be available (real or synthetic) for V1 |
+| Discovery question taxonomy | Available | `demo-data/config/discovery-questions.json` |
 | Demo data (4 accounts) | WIP | Blocks integration testing and demo |
 | Deliverable templates (4 types) | Not started | Blocks template-based generation |
 

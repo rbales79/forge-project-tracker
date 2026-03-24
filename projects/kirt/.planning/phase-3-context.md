@@ -2,7 +2,7 @@
 
 ## Phase Goal
 
-Build the LLM provider abstraction layer and deliver working Account Brief generation with full data completeness indicators, graceful degradation, SP write-back, inline editing, and feedback learning. By end of phase, the core generation loop is proven end-to-end: research pull → LLM generation → SP write-back → user edits → edits stored as future few-shot context.
+Build the LLM provider abstraction layer and deliver Account Brief, Engagement Prep, and Meeting Summary & Follow-Up generation with full data completeness indicators, graceful degradation, SP write-back, inline editing, and feedback learning. By end of phase, the core generation loop is proven end-to-end: research pull → LLM generation → SP write-back → user edits → edits stored as future few-shot context. Engagement Prep and Meeting Summary move here from Phase 4 to consolidate all generation work.
 
 ## What to Build
 
@@ -47,11 +47,14 @@ On every generated output surface:
 ### SP Write-Back
 - Deliverables write to admin-configurable output folders per account/engagement
 - File naming: `[Client]-[DocType]-[Date].docx` (e.g., `Acme-Corp-Account-Brief-2026-Q1.docx`)
+- **Regeneration updates the existing file in place** — SP versioning automatically preserves previous versions. No new files created per regeneration.
 - Foundation records SP URL in `derived_docs[]` on the research canonical record
 - User sees: output document link (in SP) + provenance summary ("Generated from [template name], [date], research run #N")
 - Write-back is explicit and user-initiated — confirmation step required
 - Generation metadata stored as Foundation annotations (timestamp, input hash, generation count)
 - Content versioning badge: "Generated v3, last updated 2026-03-20"
+- **Source files are never modified** — only output folder files are written/updated
+- **Path overlap prevention:** Output folder must not equal or overlap with any input source path. Validated at admin config time (Phase 5), enforced at write time as a safety check. Same SP site, different folder is allowed.
 
 ### Human-in-the-Loop Editing
 - Inline edit: user can edit any section of generated output in the KIRT UI
@@ -76,6 +79,42 @@ On every generated output surface:
 - Progress bar or step indicator in UI
 - Hard limit display: if >5 minutes → error state with retry option
 
+### Engagement Prep Generation (moved from Phase 4)
+Full Engagement Prep package:
+- Prior work with this account (from Foundation knowledge + SP docs)
+- Known pain points (from previous meeting notes, signals)
+- Stakeholder map (pre-populated from SF contacts + prior meetings, user-editable)
+- Recommended talking points (from account context)
+- Discovery questions (filtered 200+ taxonomy by business/industry/solution, mapped to offerings)
+- Next-best-question suggestions based on account context signals
+- Works without prior Phase 1 completion — generates from whatever context exists
+- Target: <90 seconds (soft target). Hard limit: <5 minutes.
+
+### Stakeholder Map
+- Pre-populated from SF contacts + prior meeting notes
+- User-editable inline
+- Fields: name, title, role (decision maker, champion, blocker, influencer, technical lead), relationship status, reporting relationships, notes
+- Stored as Foundation annotations per account
+
+### Meeting Summary & Follow-Up (moved from Phase 4)
+- User uploads meeting notes (any format: .docx, .txt, .pdf)
+- KIRT generates: polished recap, structured action items (with owners/dates), draft follow-up email, account intelligence update
+- Works from notes alone; enriched by existing account data if available
+- Single action: upload → something sendable (lowest-friction entry point)
+- Auto-triggers Cross-Sell signal check after ingestion
+
+### Public Data Research Pipeline
+- SEC EDGAR integration for public company filings (10-K, 10-Q, proxy statements)
+- News feed aggregation for company mentions
+- Company profile data (industry, revenue, headquarters, key executives)
+- Used by Account Brief generation and Engagement Prep
+
+### Prompt Engineering
+- Prompt design, testing, and iteration for each generation type
+- Account Brief, Engagement Prep, Meeting Summary, Client Deliverable each need dedicated prompt templates
+- Few-shot example curation for each generation type
+- All templates use Pellera format (from `demo-data/templates/`)
+
 ## Requirements Covered
 
 - R19 — Account Brief generation (<60 seconds target)
@@ -83,14 +122,23 @@ On every generated output surface:
 - R21 — Works with partial data
 - R22 — Data completeness indicators
 - R23 — Deliverable write-back to SP with generation metadata annotation
-- R37 — Generation progress indicators
-- R38 — Human-in-the-loop editing (inline edit, section regeneration)
-- R39 — Prompt-level feedback learning
-- R40 — Concurrent generation handling
-- R41 — Content versioning badge
-- R42 — SP write-back conventions (output folders, naming)
-- R43 — Write-back explicit, user-initiated, confirmation required
-- R60 — Graceful degradation (partial data → generates + flags)
+- R24 — Engagement Prep package (moved from Phase 4)
+- R25 — Stakeholder map (pre-populated, user-editable)
+- R26 — Discovery questions from 200+ taxonomy, filtered by context
+- R27 — Engagement Prep works without prior Phase 1 completion
+- R28 — Meeting Summary: polished recap (moved from Phase 4)
+- R29 — Structured action items with owners and dates
+- R30 — Draft follow-up email
+- R31 — Account intelligence update from meeting notes
+- R32 — Works from notes alone, lowest-friction entry point
+- R39 — Generation progress indicators
+- R40 — Human-in-the-loop editing (inline edit, section regeneration)
+- R41 — Prompt-level feedback learning
+- R42 — Concurrent generation handling
+- R43 — Content versioning badge
+- R44 — SP write-back conventions (output folders, naming)
+- R45 — Write-back explicit, user-initiated, confirmation required
+- R62 — Graceful degradation (partial data → generates + flags)
 
 ## Key Constraints
 
@@ -123,7 +171,7 @@ On every generated output surface:
 
 ## Research Context
 
-**Provider abstraction pattern:** Build toward OpenAI-compatible first (Azure OpenAI + Bedrock via LiteLLM proxy if available, or direct SDK). Gemini via native SDK. The abstraction layer should normalize: streaming vs. non-streaming, token limits, error codes, and retry behavior across all providers.
+**Provider abstraction pattern:** Build KIRT's own abstraction layer. Azure OpenAI + Bedrock via OpenAI-compatible SDK. Gemini via native SDK. The abstraction layer should normalize: streaming vs. non-streaming, token limits, error codes, and retry behavior across all providers. Provider selection is admin-configurable — no provider-specific code outside the abstraction layer.
 
 **Graceful degradation UX:** The data completeness indicator (% score, sources used, missing sources, improvement suggestions) is a differentiating UX pattern. Competitors generally fail silently or require complete setup. This indicator should be a first-class UI component, not an afterthought. Design it early, reuse it across all generated output types.
 

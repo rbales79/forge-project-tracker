@@ -43,6 +43,15 @@ Deliver a working search experience with deduplicated results, freshness indicat
 - Crawl schedule configuration
 - Output destination configuration (separate from input sources — where KIRT writes deliverables back)
 
+### SF CSV Import
+- Upload CSV → parse → validate → ingest into Foundation via `POST /v1/ingest/`
+- Supports SF report exports: accounts, contacts, opportunities, activities, notes
+- Column mapping configuration for different SF export formats
+- Validation: required fields, data type checks, duplicate detection
+
+### Discovery Taxonomy Note
+Discovery question taxonomy is already available in `demo-data/config/discovery-questions.json` (200+ questions, tree structure: business → industry → solution). No formalization work needed during this phase.
+
 ## Requirements Covered
 
 - R05 — Hybrid search (BM25 + semantic)
@@ -72,7 +81,6 @@ Deliver a working search experience with deduplicated results, freshness indicat
 - `ai_processing_allowed` flag must be checked before any LLM call in the classification pipeline. Opted-out content gets BM25 keyword indexing only. This must be tested explicitly.
 - Auto-classification is LLM-based — requires the LLM abstraction layer from Phase 3 to be stubbed here or the two phases coordinate. Classification can use a single default provider until the full abstraction layer is complete.
 - Location-ranking config is admin-managed, not hardcoded.
-- Discovery question taxonomy formalization should be completed during this phase (not a code dependency, but a content dependency for Phase 4 Engagement Prep).
 
 ## Tech Stack
 

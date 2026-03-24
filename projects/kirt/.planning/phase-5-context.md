@@ -12,6 +12,7 @@ Full admin surface (authenticated admin users only):
 **Data Source Configuration:**
 - Add/remove SP sites and document libraries as input sources
 - Configure output SP folders per account, engagement, or deliverable type
+- **Input/output path overlap validation:** Admin config must reject configurations where an output path equals, is a parent of, or is a child of any input source path. Same SP site with different folders is allowed. This prevents KIRT from re-ingesting its own output on the next crawl.
 - Set crawl schedules and delta sync frequency
 - Define location-ranking for canonical selection (ordered list of SP location patterns by authority)
 
@@ -79,26 +80,28 @@ Full admin surface (authenticated admin users only):
 ### Demo Data Ingestion
 Full 4-account demo data package ingested into live Foundation v3:
 
-**Account A — Apex Industries (public company, existing client):**
+**Account A (public company, existing client):**
 - Full SF data set: account record, 5+ contacts, 3+ opportunities, 8+ activities, 3+ notes
 - SP documents: account profile, SOW, 2x meeting notes, security assessment deck, cloud strategy proposal
 - Dedup test data: proposal in 3 locations (Official-Library, Team-Site, Personal) with different filenames
 - Stakeholder map: 5 stakeholders with roles and relationships
 
-**Account B — Cobalt Financial Group (public company, new prospect):**
+**Account B (public company, new prospect):**
 - Bare SF account record
 - No internal SP documents (tests greenfield research + public data flow)
 - Cross-format dedup test: AI readiness assessment as .docx + .pdf
 
-**Account C — Meridian Health Systems (private company, existing client):**
+**Account C (private company, existing client):**
 - SF data: account, contacts, opportunities
 - SP documents: BSE, SOW (SOC services), meeting notes, pitch deck
 - MSA opt-out flag set on one document (tests opt-out enforcement)
 
-**Account D — Terraform Logistics (private company, new prospect):**
+**Account D (private company, new prospect):**
 - Bare SF account record
 - 1 initial meeting note only
 - No public data available (private company, thin data stress test)
+
+Note: Accounts may be real (anonymized) or synthetic. Names and details finalized during demo data preparation.
 
 **Config files ingested:**
 - offerings-catalog.json (v0.1, 5-8 domains, 20-40 offerings)
@@ -122,8 +125,19 @@ Full 4-account demo data package ingested into live Foundation v3:
   - Cross-Sell: recommendations triggered after ingestion with offerings catalog
 - Thin-data demo (Account D): every feature operates in graceful degradation mode
 - Public data demo (Account B): research pipeline executes live against public sources
-- Dedup demo: search shows 1 result for Apex proposal + "3 copies found" badge
-- Opt-out demo: opted-out Meridian document appears in keyword search, excluded from generation
+- Dedup demo: search shows 1 result with "N copies found" badge
+- Opt-out demo: opted-out document appears in keyword search, excluded from generation
+- SF CSV import validation: synthetic CSVs loaded and verified
+
+### CI/CD Pipeline Completion
+- GitHub Actions workflow: build → test → deploy to Contabo CVPS3
+- Docker production deployment config (production docker-compose.yml, environment config)
+- Automated deployment on merge to main branch
+
+### Playwright E2E Test Infrastructure
+- E2E test framework setup (Playwright)
+- Critical flow tests automated
+- Run against deployed/staging environment with demo data loaded
 
 ### E2E Test Suite
 - Critical flow 1: Account Brief generation (Account A — rich data)
@@ -145,7 +159,7 @@ Full 4-account demo data package ingested into live Foundation v3:
 - R58 — Generation and admin: desktop-only
 - R59 — Error state when Foundation unavailable
 - R53, R54, R55 — Health endpoint, Sentry, usage logging (final verification)
-- All R01–R60: end-to-end integration validation against live Foundation
+- All R01–R62: end-to-end integration validation against live Foundation
 
 ## Key Constraints
 
@@ -170,8 +184,8 @@ Full 4-account demo data package ingested into live Foundation v3:
 - Phases 1-4 complete
 - Live Foundation v3 accessible and stable (schedule demo window around Foundation stability)
 - All demo data assets created (4 account packages, config files, templates)
-- Offerings catalog v0.1 finalized (Jonathan's action item)
-- Discovery question taxonomy finalized (200+ questions structured)
+- Offerings catalog v0.1 finalized (real or synthetic, will be available for V1)
+- Discovery question taxonomy available (`demo-data/config/discovery-questions.json`)
 - LLM provider credentials and quotas confirmed for demo volume
 - SP output folders created and permissions configured for KIRT write-back
 

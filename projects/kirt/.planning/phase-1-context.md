@@ -20,16 +20,22 @@ Stand up a working Django backend that is authenticated, connected to Foundation
 - Redis Streams subscription: `document.ingested` event listener (stub/handler registered, processing logic deferred to Phase 2)
 - Mock Foundation API server for local development (enables full unit test coverage without live Foundation dependency)
 - Environment-based configuration (no hardcoded values): Foundation base URL, Sentry DSN, AD tenant ID, Redis connection
+- MSA opt-out flag (`ai_processing_allowed`) check built into Foundation API client from day one — every query/retrieve response checked before passing to any LLM pipeline
+- Celery + Redis task queue setup (worker configuration, task routing, result backend)
+- Docker deployment setup (Dockerfile, docker-compose.yml for local dev and production)
+- CI/CD pipeline skeleton (GitHub Actions workflow targeting Contabo CVPS3)
+- SSE endpoint skeleton for real-time push notifications to frontend
 
 ## Requirements Covered
 
 - R01 — SSO login via AD/Entra identity
 - R02 — Single AD group, full platform access
 - R03 — JWT claims to Foundation on every request
-- R53 — Health endpoint
-- R54 — Error tracking (Sentry)
-- R55 — Basic usage logging
-- R59 — Error state when Foundation unavailable (health check triggers this)
+- R04 — MSA opt-out enforcement (partial — `ai_processing_allowed` flag check in API client)
+- R55 — Health endpoint
+- R56 — Error tracking (Sentry)
+- R57 — Basic usage logging
+- R61 — Error state when Foundation unavailable (health check triggers this)
 
 ## Key Constraints
 

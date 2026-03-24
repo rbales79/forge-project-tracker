@@ -139,6 +139,33 @@ SharePoint ────────── Deliverable output (generated docs wri
 | News/Industry feeds | Read | M&A, regulatory, competitive intelligence | V2 (SEC EDGAR) |
 | Red Hat FlightPath | Read | Assessment frameworks, maturity models | Reference only |
 
+## Deployment Topology
+
+```
+Contabo Infrastructure
+├── CVPS1 (Data Plane)
+│   ├── Weaviate (vector + hybrid search)
+│   ├── PostgreSQL 16 (3 DBs)
+│   ├── Redis 7 (broker + streams)
+│   └── Ollama (embedding model)
+│
+├── CVPS2 (Foundation App Plane)
+│   ├── nginx (reverse proxy)
+│   ├── Django API (gunicorn)
+│   ├── Celery Worker
+│   └── Dagster (orchestration)
+│
+└── CVPS3 (KIRT App Plane)
+    ├── Docker containers
+    │   ├── Django backend (gunicorn)
+    │   ├── Celery worker (async tasks)
+    │   ├── Redis (task queue + SSE)
+    │   └── React frontend (nginx)
+    └── CI/CD via GitHub Actions
+```
+
+KIRT on CVPS3 communicates with Foundation on CVPS2 via REST API over Contabo internal network.
+
 ## What KIRT Does NOT Access Directly
 
 KIRT never touches Foundation's internal infrastructure:

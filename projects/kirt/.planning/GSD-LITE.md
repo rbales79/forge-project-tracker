@@ -89,6 +89,82 @@ These apply to every change, regardless of type.
 8. **Deviations are fine. Undocumented deviations aren't.** If you diverge from the established architecture, patterns, or original plan — log it in DEVIATIONS.md with the rationale.
 9. **Don't refactor during a fix.** Build it, ship it, then refactor. Resist the urge to "improve" code you're touching for a different reason.
 10. **Ask when uncertain.** If you're unsure about an approach, surface it. Don't guess and hope.
+11. **Branch per build.** All work on `forge/kirt`. Commits to main only via merged PR.
+
+## State Files
+
+These files live in `.planning/` and are maintained throughout the life of the project.
+
+### SESSION_LOG.md
+
+Rolling log of AI work sessions. Append an entry every time you work on the codebase.
+
+**Format:**
+```
+## Session: YYYY-MM-DD HH:MM
+
+### What Was Requested
+<What the user asked for or what triggered this session>
+
+### What Was Done
+- <Change 1: file(s) modified, what changed, why>
+- <Change 2: ...>
+
+### Decisions Made
+- <Any decisions made during this session and the rationale>
+- <If none, omit this section>
+
+### Issues Encountered
+- <Problems hit, workarounds applied, things that didn't work>
+- <If none, omit this section>
+
+### Open Items
+- <Anything unfinished, deferred, or needing follow-up>
+- <If none, omit this section>
+
+### Next Session
+- <Suggested starting point and context for the next session>
+```
+
+**Rolling summary rule:** When SESSION_LOG.md exceeds 30 entries, summarize the
+oldest entries into a `## Digest: <date range>` block at the top. Keep the most
+recent 10 entries in full detail. The digest should synthesize: key decisions,
+patterns observed, recurring issues, and major state transitions.
+
+### KNOWLEDGE.md
+
+Accumulated project knowledge. Organized by topic, updated over time — not append-only.
+When you learn something about the codebase, add it. When existing knowledge
+becomes outdated, update or remove it.
+
+**Sections:** Architecture, Patterns & Conventions, Gotchas, Dependencies, Performance, Testing.
+
+**Update rule:** Review at the end of every session. Add new learnings. Update/remove outdated info.
+
+### DEVIATIONS.md
+
+Records when and why the codebase diverges from the original plan (HANDOFF.md,
+Execution Guide, or established architecture).
+
+**Format:**
+```
+## <Short Description>
+- **Date:** YYYY-MM-DD
+- **Original Plan:** <What the HANDOFF/design/architecture specified>
+- **What Changed:** <What was actually done>
+- **Why:** <Rationale — why the deviation was necessary or better>
+- **Impact:** <What else this affects — downstream changes, test changes, etc.>
+```
+
+**Update rule:** Any time you make a change that contradicts HANDOFF.md,
+Execution Guide, or an established pattern — log it here. Not every change
+is a deviation. Only log changes that would surprise someone reading the original plan.
+
+### BUILD_LOG.md
+
+Layer-by-layer progress during V1 construction. Active during initial build, then archived.
+
+**Update rule:** Update after completing every layer, not at the end.
 
 ## Scope Enforcement
 
@@ -98,16 +174,16 @@ These apply to every change, regardless of type.
 - R13-R18: Document upload → Foundation ingest, auto-classification (7 types), job tracking, manual override, notifications, admin SP site ingestion
 - R19-R23: Account Brief (<60s), 9 sections, partial data support, completeness indicators, SP write-back
 - R24-R27: Engagement Prep (prior work, stakeholder map, discovery questions, next-best-question)
-- R28-R30: Meeting Summary & Follow-Up (notes → recap + action items + email draft)
-- R31-R33: Client Deliverable (name + keywords → client-ready doc with account history)
-- R34-R36: Cross-sell recommendations (pattern-based, triggered after ingestion)
-- R37-R43: Generation infrastructure (progress indicators, inline editing, feedback learning, concurrent handling, versioning, SP write-back conventions)
-- R44-R46: SAF overlay (optional for EA users), growth scoring (equal weights, manual override)
-- R47-R49: Canonical selection (location-ranking config), archival
-- R50-R52: Admin config (SP paths, scoring weights, LLM provider, offerings catalog, GDPR purge, input/output separation)
-- R53-R55: Health endpoint, error tracking (Sentry), usage logging
-- R56-R58: Responsive mobile read flows, task-oriented UI, desktop-only generation/admin
-- R59-R60: Error state for Foundation unavailable, graceful degradation everywhere
+- R28-R32: Meeting Summary & Follow-Up (notes → recap + action items + email draft + intelligence update)
+- R33-R35: Client Deliverable (name + keywords → client-ready doc with account history)
+- R36-R38: Cross-sell recommendations (pattern-based, triggered after ingestion)
+- R39-R45: Generation infrastructure (progress indicators, inline editing, feedback learning, concurrent handling, versioning, SP write-back conventions)
+- R46-R48: SAF overlay (optional for EA users), growth scoring (equal weights, manual override)
+- R49-R51: Canonical selection (location-ranking config), archival
+- R52-R54: Admin config (SP paths, scoring weights, LLM provider, offerings catalog, GDPR purge, input/output separation)
+- R55-R57: Health endpoint, error tracking (Sentry), usage logging
+- R58-R60: Responsive mobile read flows, task-oriented UI, desktop-only generation/admin
+- R61-R62: Error state for Foundation unavailable, graceful degradation everywhere
 
 **Out of scope — do not build:**
 - D01-D16: V2 features (near-duplicate detection, access tiers, opportunity scoring, maturity gate, email/push notifications, cached mode, RAG feedback, SF narrative pipeline, SEC EDGAR, APM, quality scoring, retention policies, transcript analysis, stale alerts)
@@ -175,11 +251,12 @@ npm run typecheck                # TypeScript checking
 ### Critical Dependencies
 
 - **Foundation v3.0** — 13 REST API endpoints. KIRT cannot function without it. Live on Contabo.
-- **Offerings catalog v0.1** — WIP. Cross-sell, white space, scoring all degrade without it. Not a blocker — features degrade gracefully.
-- **Discovery question taxonomy** — 200+ questions, may need formalization from informal notes during build.
-- **Demo data (4 accounts)** — Required for integration testing and demo. Not yet ingested into Foundation.
+- **Offerings catalog v0.1** — Will be available (real or synthetic) for V1. Cross-sell, white space, scoring all degrade without it. Not a blocker — features degrade gracefully.
+- **Discovery question taxonomy** — Available in `demo-data/config/discovery-questions.json`. 200+ questions, tree structure.
+- **Demo data (4 accounts)** — Being prepared separately, does not block build. Required for integration testing and demo.
 - **AD/SSO test environment** — Required for auth layer.
-- **SP test site with read/write** — Required for upload, write-back, source management.
+- **SP test site** — forgecf.sharepoint.com (available). Entra app registration: Roy will create when needed.
+- **CVPS3 provisioning** — Contabo VPS for Docker deployment. Roy will provision when Phase 1 deployment work begins.
 
 ### Development Strategy
 

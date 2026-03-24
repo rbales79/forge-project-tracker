@@ -41,41 +41,13 @@ Users interact with KIRT. They never touch Foundation directly. KIRT owns all bu
 | Deliverable write-back | Generated docs write to configurable SP output folders. `[Client]-[DocType]-[Date].docx` naming. |
 | Admin settings | SP paths, directory structures, scoring weights, offerings catalog — tunable per deployment. |
 
-### V2 — Discovery & Scoring (SAF Phase 3)
+### Future Versions (V2+)
 
-| Capability | Detail |
-|-----------|--------|
-| Transcript analysis | Speaker diarization, signal extraction, sentiment analysis |
-| Opportunity scoring | Signal-based scoring from transcripts + engagement data, human-confirmed |
-| Offering maturity gate | Pass/fail before Phase 4 deliverable generation |
-| Near-duplicate detection | Fuzzy matching (SimHash/MinHash or embedding similarity) |
-| Version lineage | Distinguish accidental duplication from intentional versioning |
-| Cross-format dedup | docx ↔ pdf parity |
-| Persona-based views | EA vs. AE vs. Sales Leadership see different dashboards |
-| Public company monitoring | SEC EDGAR integration for account intelligence |
+Deferred capabilities, listed for roadmap context only. See HANDOFF.md D01-D27 for full deferred item list.
 
-### V3 — Client Deliverables (SAF Phase 4)
-
-| Capability | Detail |
-|-----------|--------|
-| Reframe deck generation | Pulls scored opportunities, past deliverables, offering data |
-| Assessment kickoff | Template-driven generation |
-| Transformation roadmap | Requires full scored + gated opportunity pipeline |
-| EBR/QBR packages | Engagement review deliverables |
-| Agentic RAG | Multi-hop retrieval for complex generation tasks |
-| Template management | Versioning, selection logic, pull-populate-write cycle |
-| Full provenance | Every generated insight shows source data with attribution |
-
-### V4+ — Enablement & Continuous Threads (SAF Phases 5-6)
-
-| Capability | Detail |
-|-----------|--------|
-| Insight drops | Proactive intelligence delivery based on triggers |
-| Win/loss patterns | ML-driven analysis across closed engagements |
-| Advancement triggers | Defined events signaling opportunity progression |
-| Stakeholder tracking | Persistent relationship maps with change detection |
-| Outcome register | Win wires, past performance, institutional memory |
-| Multi-agent architecture | Specialized agents per SAF phase |
+- **V2:** Transcript analysis (diarization, signals), opportunity scoring (ML-informed), offering maturity gate, near-duplicate detection (fuzzy), cross-format dedup, persona-based views, public company monitoring (SEC EDGAR), cached/degraded mode, role-based access tiers, RAG feedback loop
+- **V3:** Reframe deck generation, assessment kickoff, transformation roadmap, EBR/QBR packages, agentic RAG, template management with versioning, full provenance tracking
+- **V4+:** Insight drops, win/loss patterns, advancement triggers, persistent stakeholder tracking, outcome register, multi-agent architecture, SF direct API, multi-tenancy
 
 ## Document Classification
 

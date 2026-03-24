@@ -28,7 +28,7 @@ KIRT generates Account Briefs, Engagement Prep packages, Meeting Summaries, Clie
 - **Single-tenant V1.** Internal Pellera deployment only.
 - **Web app only.** Responsive (mobile: read flows). Desktop: generation + admin.
 - **LLM: multi-provider abstraction.** Gemini, Azure OpenAI, AWS Bedrock. No provider-specific code.
-- **SP is document source-of-truth.** KIRT writes new deliverable files, never edits source files.
+- **SP is document source-of-truth.** KIRT never edits source files. Generated deliverables in output folders are updated in place on regeneration (SP versioning preserves history).
 - **Permission inheritance is strict.** If you can't see it in SP, you can't see it in KIRT.
 - **MSA opt-out is absolute.** `ai_processing_allowed: false` → keyword search only. No LLM ever.
 - **Offerings catalog and discovery question taxonomy must be created before demo.** Content dependency — not code.
@@ -57,13 +57,33 @@ GSD — Full execution management. Complex multi-service build with compliance r
 
 ## Done (V1)
 
-- [ ] All 60 Must-Have requirements (R01–R60) implemented and tested
-- [ ] 5 MVP output types working: Account Brief, Engagement Prep, Meeting Summary, Client Deliverable, Cross-Sell
-- [ ] Demo runs reliably 3 consecutive times without intervention
-- [ ] 4 demo accounts ingested: public existing, public prospect, private existing, private thin
-- [ ] Admin settings: all configurable parameters tunable without code changes
-- [ ] MSA opt-out audit passes: opted-out content never in LLM pipeline
-- [ ] GDPR purge: annotation cleanup verified
-- [ ] Sentry error tracking active
+- [ ] Task-oriented UI ("What do you need?" — search, prep for meeting, generate brief, upload documents)
+- [ ] All three user modes supported (Full SAF, On-Demand Intelligence, Consumer)
+- [ ] SSO login (live AD/SSO) with single AD group full access
+- [ ] Hybrid search (keyword + semantic, deduplicated results, freshness indicators)
+- [ ] Account Brief generation (<60 seconds) with data completeness indicators
+- [ ] Engagement Prep generation (meeting brief + discovery questions + stakeholder map)
+- [ ] Meeting Summary & Follow-Up (upload notes → recap + action items + draft follow-up email)
+- [ ] Client Deliverable generation (company name + keywords → client-ready doc)
+- [ ] Cross-sell recommendations (pattern-based from engagement history)
+- [ ] Document upload → Foundation ingest → auto-classification (7 doc types)
+- [ ] Meeting note upload → signal extraction → account enrichment
+- [ ] Exact duplicate detection (content hash, 1-result UX with "N copies" badge)
+- [ ] Human-in-the-loop editing (inline edit, section regeneration)
+- [ ] Prompt-level feedback learning (store edits as few-shot context)
+- [ ] Deliverable write-back to SP output folders with metadata annotations
+- [ ] In-app notification badges (new data, stale briefs, generation complete)
+- [ ] Concurrent generation handling (write both, user picks winner)
+- [ ] Responsive web UI (mobile read access for search, briefs, engagement prep)
+- [ ] AI-generated discovery questions from account context
+- [ ] Admin-configurable settings (SP paths, scoring weights, LLM provider, offerings catalog, location ranking)
+- [ ] Source management via admin config (connect SP sites, configure output destinations)
+- [ ] Health endpoint, error tracking (Sentry), basic usage logging
+- [ ] MSA opt-out enforcement (keyword search only for opted-out content)
+- [ ] Admin-triggered GDPR purge actions
+- [ ] Error state when Foundation is unavailable
+- [ ] Data completeness indicators on every generated output
+- [ ] Graceful degradation — every feature works with partial data
+- [ ] Demo reliability: 3 consecutive successful end-to-end runs
 - [ ] No hardcoded providers, SP paths, or scoring weights
 - [ ] Non-technical stakeholder understands value without explanation

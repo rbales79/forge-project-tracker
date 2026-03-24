@@ -41,8 +41,8 @@ All decisions are `[FROM SOURCE]` — locked from spec seed. None deferred to us
 | Feedback V1 | Prompt-level (store edits as few-shot context) | spec-seed locked |
 | Concurrent generation | Both complete, both write SP, user picks winner | spec-seed locked |
 | Error state | Show error when Foundation unavailable (no degraded mode V1) | spec-seed locked |
-| Offerings catalog | v0.1 extracted from PPT/collateral (WIP) | spec-seed locked |
-| Discovery questions | 200+ questions, tree structure, may need formalization | spec-seed locked |
+| Offerings catalog | v0.1 real or synthetic, will be available for V1 | spec-seed locked |
+| Discovery questions | 200+ questions, tree structure, available in demo-data/config/discovery-questions.json | spec-seed locked |
 | Demo data | 4 accounts (anonymized), public data at runtime | spec-seed locked |
 | Notifications V1 | In-app badges only | spec-seed locked |
 | Foundation version | V3.0 only | spec-seed locked |
@@ -78,7 +78,7 @@ All decisions are `[FROM SOURCE]` — locked from spec seed. None deferred to us
 ## Prior Art (in Forge Ecosystem)
 
 - **Foundation reference POC:** MCP-native Django monolith, 9 layers, 179 passing tests. KIRT mirrors this architecture. Available as direct reference for Phase 1 project setup.
-- **KIRT spec corpus:** `~/repos/KIRT/` — locked decisions, architecture docs, interactive architecture HTML, foundation layer and intelligence layer docs. Read-only spec reference.
+- **KIRT spec corpus:** `~/repos/KIRT/` — locked decisions, architecture docs. Read-only spec reference. Architecture docs and spec seed live in `forge-project-tracker/projects/kirt/`.
 
 ---
 
@@ -96,6 +96,6 @@ Next action: **Return to Manager** → Manager creates project repo and initiate
 |------------|-------|---------------|
 | [ASSUMPTION] Build team has Django expertise (MCP-native pattern) | Foundation POC as prior art | Phase 1 slower if pattern is unfamiliar |
 | [ASSUMPTION] Foundation v3 API is stable and won't have breaking changes before KIRT build | Spec says v3 is running and operational | Integration tests would fail |
-| [ASSUMPTION] LiteLLM proxy at litellm.roybales.com can serve as OpenAI-compatible gateway for some providers | Roy's workspace CLAUDE.md describes LiteLLM proxy infrastructure | Would need direct provider SDKs if proxy not available for KIRT |
+| [ASSUMPTION] KIRT builds its own multi-provider LLM abstraction layer (not LiteLLM) | Spec seed defines OpenAI-compatible abstraction, Roy explicitly rejected LiteLLM for KIRT | Direct provider SDKs required for Gemini, Azure OpenAI, Bedrock |
 | [ASSUMPTION] 5-phase build order is achievable as a sequential GSD milestone structure | Spec V1 scope | GSD may reorganize phases differently |
 | [ASSUMPTION] Complexity is `Complex` (not `Moderate`) | 6+ complex signals from criteria matrix | GSD may choose different phase depth |

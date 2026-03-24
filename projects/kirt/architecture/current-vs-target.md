@@ -90,6 +90,12 @@ KIRT is infrastructure-agnostic by design:
 | Frontend | React + Vite + Tailwind + Shadcn |
 | Backend | Django, MCP-native |
 | Data access | Foundation REST API |
+| Deployment | Docker on Contabo CVPS3 |
+| CI/CD | GitHub Actions |
+| Task queue | Celery + Redis |
+| Real-time | Redis Streams (backend) + SSE (frontend) |
+
+KIRT V1 deploys to Contabo CVPS3 in Docker containers. Azure migration is a future concern — when Foundation migrates, KIRT follows. The only KIRT-side change is the API base URL.
 
 KIRT does not replicate Foundation capabilities. It does not:
 - Manage data source connections (Foundation does this)

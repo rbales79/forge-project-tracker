@@ -6,15 +6,15 @@
 
 ## Critical Risks
 
-### RISK-01: Offerings Catalog Does Not Exist
+### RISK-01: Offerings Catalog Quality
 - **Category:** Dependency
-- **Severity:** CRITICAL
-- **Description:** The offerings catalog v0.1 is the single largest content dependency. White space grid, growth scoring, cross-sell recommendations, and Engagement Prep discovery question mapping all depend on it. It does not exist today — it must be extracted from PPT decks and practice collateral.
-- **Evidence:** Spec explicitly states: "The catalog does not exist yet — this is the single biggest content dependency."
-- **Mitigation:** Best-effort v0.1 extraction from PPT decks and practice collateral before demo. Assign ownership immediately (Jonathan action item per spec). Features operate in graceful degradation mode without it — completeness indicator flags "offerings catalog not configured."
-- **Blast radius:** Without catalog: white space grid empty, cross-sell imprecise, Engagement Prep question mapping untargeted.
-- **Reversibility:** Can be added post-build without code changes (admin config upload).
-- **Decision:** `[FROM SOURCE]` Extract v0.1 from existing materials. Don't defer with a placeholder. Don't build from scratch.
+- **Severity:** MEDIUM
+- **Description:** The offerings catalog v0.1 is a content dependency for white space grid, growth scoring, cross-sell recommendations, and Engagement Prep discovery question mapping. The catalog will be available (real extraction from practice materials preferred; synthetic fallback acceptable). The risk is quality, not existence.
+- **Evidence:** Real or synthetic catalog will be available for V1 demo.
+- **Mitigation:** Best-effort v0.1 extraction from PPT decks and practice collateral before demo. Synthetic fallback if real extraction timeline slips. Features operate in graceful degradation mode without it — completeness indicator flags "offerings catalog not configured."
+- **Blast radius:** Without catalog: white space grid empty, cross-sell imprecise, Engagement Prep question mapping untargeted. With low-quality catalog: results are directionally correct but may miss offerings.
+- **Reversibility:** Can be refined post-build without code changes (admin config upload).
+- **Decision:** `[FROM SOURCE]` Extract v0.1 from existing materials. Synthetic fallback acceptable for demo.
 
 ---
 
@@ -30,13 +30,13 @@
 - **Reversibility:** Cached/degraded mode is V2+ — deferred intentionally.
 - **Decision:** `[FROM SOURCE]` No degraded mode in V1. Error state only.
 
-### RISK-03: Discovery Question Taxonomy as Informal Notes
+### RISK-03: Discovery Question Taxonomy
 - **Category:** Dependency / Content
-- **Severity:** HIGH
-- **Description:** The 200+ question set exists across 20+ variants, possibly as informal notes rather than a structured taxonomy document. If no formalized file exists, one must be created during Phase 2/4.
-- **Evidence:** Spec states: "Questions may exist as informal notes rather than a structured document — if no formalized taxonomy file exists, one will need to be created during build."
-- **Mitigation:** Formalize during Phase 2 (content deliverable, not code). Tree structure: business → industry → solution. Tag each question with module, applicable industries, related offerings. Block Engagement Prep integration tests until taxonomy is structured.
-- **Blast radius:** Engagement Prep loses question filtering precision until taxonomy is formalized. Feature still ships but with lower quality.
+- **Severity:** RESOLVED
+- **Description:** The 200+ question set has been structured as a tree taxonomy (business → industry → solution) and is available in `demo-data/config/discovery-questions.json`.
+- **Evidence:** Structured taxonomy generated with 200+ questions tagged by module, applicable industries, and related offerings.
+- **Mitigation:** N/A — resolved.
+- **Blast radius:** N/A — taxonomy is available.
 - **Reversibility:** Taxonomy can be refined iteratively after V1.
 
 ### RISK-04: LLM Generation Quality Below 80-90% Threshold
@@ -155,9 +155,9 @@
 
 | Risk | Severity | Category | Mitigation Status |
 |------|----------|----------|-------------------|
-| RISK-01: Offerings catalog missing | CRITICAL | Dependency | Extraction underway (WIP) |
+| RISK-01: Offerings catalog quality | MEDIUM | Dependency | Will be available (real or synthetic) for V1 |
 | RISK-02: Foundation unavailable | HIGH | Infrastructure | Mock API in Phase 1 |
-| RISK-03: Taxonomy as informal notes | HIGH | Content | Formalize in Phase 2 |
+| RISK-03: Discovery taxonomy | RESOLVED | Content | Structured taxonomy generated |
 | RISK-04: Generation quality below threshold | HIGH | Technical | Prompt feedback loop in Phase 3 |
 | RISK-05: SP permission enforcement gap | HIGH | Security | Integration test required |
 | RISK-06: MSA opt-out gap | HIGH | Compliance | Phase 5 audit + integration test |
@@ -174,6 +174,8 @@
 | RISK-17: Template ground truth collection stalls | MEDIUM | Organizational | Escalation path through Carlos |
 | RISK-18: Executive alignment not yet obtained | MEDIUM | Organizational | Demo scoped as "demo-ready MVP" |
 | RISK-19: Content owner bandwidth | MEDIUM | Organizational | All dependencies have degradation paths |
+| RISK-20: Deployment infrastructure | MEDIUM | Infrastructure | CVPS3 provisioning + Docker setup in Phase 1 |
+| RISK-21: SF data availability | MEDIUM | Dependency | CSV import with graceful absence, API is V4+ |
 
 ---
 
@@ -214,3 +216,19 @@
 - **Mitigation:** All three dependencies have graceful degradation paths (by design). Offerings catalog: cross-sell works from engagement patterns, white space shows "not configured." Discovery taxonomy: AI-generates questions from context. Templates: generation works without templates (unstructured output). Priority order: templates (most visible impact) > offerings catalog > discovery taxonomy. Roy can create minimal versions of all three if Caleb is unavailable — spec defines exact requirements.
 - **Blast radius:** Multiple features degrade simultaneously. Demo shows the "partial data" experience more than intended.
 - **Reversibility:** All three content dependencies can be delivered and integrated iteratively without code changes.
+
+### RISK-20: Deployment Infrastructure
+- **Category:** Infrastructure
+- **Severity:** MEDIUM
+- **Description:** KIRT deploys to Contabo CVPS3 in Docker containers with CI/CD via GitHub Actions. CVPS3 must be provisioned, Docker installed, and the deployment pipeline configured before integration testing can run against a deployed instance.
+- **Mitigation:** CVPS3 provisioning is a Phase 1 task. Docker and CI/CD setup are part of Layer 1 deliverables. Foundation runs on CVPS1/CVPS2, so the Contabo pattern is proven.
+- **Blast radius:** Without CVPS3, can only test locally. Demo requires deployed instance.
+- **Reversibility:** Can deploy to alternative infrastructure if CVPS3 is delayed.
+
+### RISK-21: SF Data Availability
+- **Category:** Dependency / Data
+- **Severity:** MEDIUM
+- **Description:** KIRT may never get direct SF API access. V1 designs for CSV import. Risk is that CSV export process is manual, error-prone, or produces inconsistent schemas across SF instances.
+- **Mitigation:** Design CSV import with graceful absence — features work without SF data (flagged in completeness indicators). Synthetic CSVs for demo. Column mapping configuration handles schema differences. Direct API access is V4+ — do not design around it.
+- **Blast radius:** Without SF data, Account Briefs and growth scoring lose CRM context. Features still generate from SP docs + public data.
+- **Reversibility:** CSV import mechanism supports any future data source. API integration is additive.

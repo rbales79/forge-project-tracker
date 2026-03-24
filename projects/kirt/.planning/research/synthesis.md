@@ -8,15 +8,15 @@
 
 Items extracted from spec seed that inform must-have requirements. These were confirmed in the spec and carried directly to HANDOFF.md Requirements Signals.
 
-- `[FROM RESEARCH]` Three distinct user modes must be supported from V1: Full SAF, On-Demand Intelligence, Consumer. UI must be task-oriented, not phase-oriented. → R57
-- `[FROM RESEARCH]` Graceful degradation is not optional. Every feature must work with partial data and communicate what's missing. This is a differentiating product behavior, not a nice-to-have. → R60, R22
-- `[FROM RESEARCH]` Meeting Summary & Follow-Up is the lowest-friction entry point. Upload notes → get something sendable. Single action, immediate value. Priority entry point for on-demand users. → R28, R29, R30
+- `[FROM RESEARCH]` Three distinct user modes must be supported from V1: Full SAF, On-Demand Intelligence, Consumer. UI must be task-oriented, not phase-oriented. → R59
+- `[FROM RESEARCH]` Graceful degradation is not optional. Every feature must work with partial data and communicate what's missing. This is a differentiating product behavior, not a nice-to-have. → R62, R22
+- `[FROM RESEARCH]` Meeting Summary & Follow-Up is the lowest-friction entry point. Upload notes → get something sendable. Single action, immediate value. Priority entry point for on-demand users. → R28–R32
 - `[FROM RESEARCH]` Discovery question taxonomy (200+ questions, tree structure) is a content dependency, not just a code feature. The questions may not exist in structured form — creating them is part of the build. → Phase 4 dependency
 - `[FROM RESEARCH]` Offerings catalog is the single largest content dependency. It does not exist. Everything depends on it (cross-sell, white space, scoring, question mapping). → RISK-01
 - `[FROM RESEARCH]` Public data for public company accounts is gathered at runtime via AI research workflow — not pre-staged files. Demo accounts must be real public companies (or realistic synthetics) so live research can execute. → R19 (Account Brief), demo data design
-- `[FROM RESEARCH]` SP write-back uses output folders separate from input source folders. This is the normalization strategy. Input and output SP locations must never mix. → R52
-- `[FROM RESEARCH]` Prompt-level feedback learning (store edits as few-shot examples) is V1. RAG feedback loop is V2. Fine-tuning is V3+. This is a clear progression — don't over-engineer V1 feedback. → R39
-- `[FROM RESEARCH]` Redis Streams `document.ingested` event is the near-real-time trigger for cross-sell, notification badges, and account intelligence updates. Foundation provides this — KIRT subscribes. → R17, R35
+- `[FROM RESEARCH]` SP write-back uses output folders separate from input source folders. This is the normalization strategy. Input and output SP locations must never mix. → R54
+- `[FROM RESEARCH]` Prompt-level feedback learning (store edits as few-shot examples) is V1. RAG feedback loop is V2. Fine-tuning is V3+. This is a clear progression — don't over-engineer V1 feedback. → R41
+- `[FROM RESEARCH]` Redis Streams `document.ingested` event is the near-real-time trigger for cross-sell, notification badges, and account intelligence updates. Foundation provides this — KIRT subscribes. → R17, R37
 
 ---
 
@@ -24,9 +24,9 @@ Items extracted from spec seed that inform must-have requirements. These were co
 
 - `[FROM RESEARCH: UX]` Data completeness indicator is a first-class UI component, not a tooltip or footnote. Shows: sources used, what's missing, quality % score, specific improvement actions. Reused across all 5 MVP output types. → Phase 3 component, Phase 4 reuse
 - `[FROM RESEARCH: UX]` Task-oriented entry UI: "What do you need?" — not "Which SAF step are you on?" Non-SAF users should never feel like they're skipping a step. → Phase 5 UX review
-- `[FROM RESEARCH: UX]` SAF progress overlay is off by default. Non-EA users never see it. EA users opt in. The overlay is informational only — no workflow gates in V1. → R44
+- `[FROM RESEARCH: UX]` SAF progress overlay is off by default. Non-EA users never see it. EA users opt in. The overlay is informational only — no workflow gates in V1. → R46
 - `[FROM RESEARCH: UX]` Search result ranking as knowledge hierarchy (account dossier → meeting notes → SF → public → playbooks) is a UX decision, not just a technical one. Users expect more relevant results first. Implement as document-type weighting in Foundation query. → R10
-- `[FROM RESEARCH: UX]` Generation progress: show "Still working — pulling data from N sources" if >60 seconds. Users will abandon if they see just a spinner. The N sources shown builds trust in the depth of research. → R37
+- `[FROM RESEARCH: UX]` Generation progress: show "Still working — pulling data from N sources" if >60 seconds. Users will abandon if they see just a spinner. The N sources shown builds trust in the depth of research. → R39
 - `[FROM RESEARCH: UX]` "N copies found" badge: visible on result card, expandable. The default experience hides the complexity; power users can drill in. Dedup is invisible to the standard user flow. → R08, R09
 - `[FROM RESEARCH: UX]` Inline editing + section regeneration must feel immediate. If a user edits a section and hits "regenerate", the result should replace the section in-place — not redirect to a new page or start a full document regeneration.
 - `[FROM RESEARCH: UX]` White space grid as visual anchor: the offerings × engagement status matrix is a high-value visual for both Account Brief and standalone. Rich-data accounts (Account A) show populated grids. Thin-data accounts (Account D) show mostly empty with completeness indicator.
