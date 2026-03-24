@@ -1,11 +1,11 @@
 name: "KIRT"
-status: ideation
-active_agent: ideation
-current_phase: "artifacts-complete"
+status: building
+active_agent: builder
+current_phase: "pre-build"
 created: 2026-03-24
 updated: 2026-03-24
 description: "AI-powered intelligence layer for the Strategic Account Framework. Generates Account Briefs, Engagement Prep packages, Meeting Summaries, Client Deliverables, and Cross-Sell Recommendations on top of Forge Foundation v3. Serves Full SAF, On-Demand, and Consumer user modes."
-repo: ""
+repo: "https://github.com/rbales79/KIRT"
 tier: 1
 track: gsd
 complexity: complex
