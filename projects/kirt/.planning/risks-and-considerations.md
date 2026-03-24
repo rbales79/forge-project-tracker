@@ -170,3 +170,47 @@
 | RISK-13: SP write-back permission scope | LOW | Security | Review during build |
 | RISK-14: Foundation v4 feature creep | LOW | Scope | V3-only constraint enforced |
 | RISK-15: Contabo → Azure drift | LOW | Infrastructure | Environment config only |
+| RISK-16: Adoption beyond EA team | LOW (V1) | Organizational | Three user modes designed from V1 |
+| RISK-17: Template ground truth collection stalls | MEDIUM | Organizational | Escalation path through Carlos |
+| RISK-18: Executive alignment not yet obtained | MEDIUM | Organizational | Demo scoped as "demo-ready MVP" |
+| RISK-19: Content owner bandwidth | MEDIUM | Organizational | All dependencies have degradation paths |
+
+---
+
+## Organizational Risks
+
+### RISK-16: Adoption Beyond EA Team
+- **Category:** Organizational
+- **Severity:** LOW (V1) — actual adoption risk is post-V1
+- **Description:** V1 is an internal demo. The demo must be convincing to both EA-audience (Full SAF value) and AE/GTM audience (On-Demand value) simultaneously. If the demo audience doesn't see themselves in the product, leadership approves but GTM team doesn't adopt post-V1.
+- **Evidence:** Three user modes (Full SAF, On-Demand, Consumer) designed into V1 architecture.
+- **Mitigation:** Meeting Summary & Follow-Up is the lowest-friction entry point for on-demand users (upload notes → get sendable email). Task-oriented UI ("What do you need?") speaks to all personas, not just SAF-fluent EAs. Demo has two emphasis modes: leadership (cost-of-sale reduction) and GTM (time savings before tomorrow's meeting).
+- **Blast radius:** Leadership approves but actual adoption stalls post-V1 if GTM users don't see value.
+- **Reversibility:** Post-V1 iteration can adjust user modes based on feedback.
+
+### RISK-17: Template Ground Truth Collection Stalls
+- **Category:** Organizational
+- **Severity:** MEDIUM
+- **Description:** Deliverable templates and the offerings catalog require content owner involvement (Caleb). If content collection stalls due to bandwidth, priorities, or unclear ownership, generation quality suffers. Generation produces placeholder-quality output and demo shows structure but not substance.
+- **Evidence:** Three content dependencies (offerings catalog, discovery taxonomy, deliverable templates) all route through a single content owner.
+- **Mitigation:** Start with available samples — any existing Account Brief, Engagement Prep, or proposal serves as a template seed. Templates can iterate rapidly once generation works — first pass is structural, not final. Escalation path through Carlos if content bandwidth is the bottleneck. KIRT can generate without templates (unstructured output) — templates improve format, not feasibility.
+- **Blast radius:** Multiple features produce unstructured output instead of formatted deliverables matching expected output format.
+- **Reversibility:** Templates can be added iteratively post-launch without code changes.
+
+### RISK-18: Executive Alignment Not Yet Obtained
+- **Category:** Organizational
+- **Severity:** MEDIUM
+- **Description:** KIRT is in pre-build ideation. Executive buy-in (Carlos and broader leadership) depends on a convincing demo. The demo itself depends on successful build execution. Build may complete but organizational support for production deployment doesn't materialize.
+- **Evidence:** V1 is explicitly scoped as "demo-ready MVP" not "production deployment."
+- **Mitigation:** V1 scoped as "demo-ready MVP" — lower the bar for executive decision. Demo audience includes both leadership (strategic alignment) and GTM (tactical value) to build grassroots support. The "credible demo" success criterion is designed for this exact scenario — stakeholder watches and understands the value without explanation.
+- **Blast radius:** Build completes but production deployment doesn't get organizational support.
+- **Reversibility:** Demo can be re-run for different audiences; scope can be adjusted based on feedback.
+
+### RISK-19: Content Owner Bandwidth
+- **Category:** Organizational
+- **Severity:** MEDIUM
+- **Description:** Three content dependencies (offerings catalog, discovery taxonomy, deliverable templates) all route through Caleb. If Caleb is pulled to other priorities, all three are at risk simultaneously, causing multiple features to degrade at the same time.
+- **Evidence:** Single content owner for three parallel content deliverables.
+- **Mitigation:** All three dependencies have graceful degradation paths (by design). Offerings catalog: cross-sell works from engagement patterns, white space shows "not configured." Discovery taxonomy: AI-generates questions from context. Templates: generation works without templates (unstructured output). Priority order: templates (most visible impact) > offerings catalog > discovery taxonomy. Roy can create minimal versions of all three if Caleb is unavailable — spec defines exact requirements.
+- **Blast radius:** Multiple features degrade simultaneously. Demo shows the "partial data" experience more than intended.
+- **Reversibility:** All three content dependencies can be delivered and integrated iteratively without code changes.

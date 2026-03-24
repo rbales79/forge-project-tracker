@@ -108,7 +108,7 @@ Permanently out of scope:
 
 **Demo reliability requirement:** Three consecutive runs without intervention. Test this explicitly in Phase 5 before marking complete. Common failure modes: LLM rate limits, Foundation cold start, SP write-back permission scope.
 
-**Market research:** Competitive analysis confirms this is a build-not-buy. No existing tool covers Foundation-native data layer + SAF alignment + SP write-back + multi-provider LLM + graceful degradation. Closest competitor (Microsoft Copilot for Sales) is generic where KIRT is purpose-built. Full ECC market-research agent output will merge into `research/market-research.md` when the background agent completes.
+**Market research:** Full ECC market-research output merged into `research/market-research.md` (20+ primary sources, March 2026 data). Key finding: KIRT's white space is structural — no incumbent owns internal document intelligence + deliverable generation + SP write-back. Three structural moats confirmed: unstructured internal docs, deliverable generation (not summaries), SP as source and destination. Closest competitors: DemandFarm (KAM, CRM-bounded), Microsoft Copilot for Sales (general assistant, monitoring quarterly for SharePoint Agents convergence). **Build recommendation: Greenfield confirmed.**
 
 ---
 

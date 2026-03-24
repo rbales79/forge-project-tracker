@@ -49,6 +49,12 @@ KIRT generates Account Briefs, Engagement Prep packages, Meeting Summaries, Clie
 
 GSD — Full execution management. Complex multi-service build with compliance requirements.
 
+## References
+
+- **CHARTER:** `.planning/CHARTER.md` — Non-goals, success metrics, stakeholders (RACI), milestones M1-M5, dependencies, budget
+- **HANDOFF:** `.planning/HANDOFF.md` — Build-ready handoff with requirements, personas, key decisions, build order
+- **Risks:** `.planning/risks-and-considerations.md` — Full risk assessment (technical, content, organizational, scope)
+
 ## Done (V1)
 
 - [ ] All 60 Must-Have requirements (R01–R60) implemented and tested
