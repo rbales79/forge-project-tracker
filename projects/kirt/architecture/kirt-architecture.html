@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIRT -- Architecture Reference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(22, 33, 62, 0.98), rgba(15, 52, 96, 0.98));
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #e94560;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #e94560;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #e94560;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-subtitle {
+            color: #a0c4ff;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #16213e 0%, #0f3460 100%);
+            border-right: 1px solid rgba(233, 69, 96, 0.2);
+            padding: 2rem 0;
+            overflow-y: auto;
+            position: fixed;
+            height: calc(100vh - 120px);
+            left: 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 3px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 0.85rem 1.5rem;
+            color: #a0c4ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(233, 69, 96, 0.1);
+            border-left-color: #e94560;
+            padding-left: 1.75rem;
+        }
+
+        .nav-item.active {
+            background: rgba(233, 69, 96, 0.15);
+            border-left-color: #e94560;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .nav-section-label {
+            display: block;
+            padding: 0.5rem 1.5rem;
+            color: #e94560;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 1rem;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 3rem;
+            max-width: 100%;
+            background: #f4f6f9;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styles */
+        .section h2 {
+            font-size: 2.2rem;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            color: #16213e;
+            margin: 2rem 0 1rem;
+            font-weight: 600;
+        }
+
+        .section h4 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            margin: 1rem 0 0.5rem;
+            font-weight: 600;
+        }
+
+        .section p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 1rem;
+            font-size: 1.02rem;
+        }
+
+        .section ul, .section ol {
+            margin: 0.75rem 0 1rem 1.5rem;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .section li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #e94560;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card.expandable {
+            cursor: pointer;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card h4 {
+            font-size: 1.15rem;
+            color: #1a1a2e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .card.collapsed .card-content {
+            max-height: 0;
+        }
+
+        .expand-icon {
+            color: #e94560;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .card.collapsed .expand-icon {
+            transform: rotate(-90deg);
+        }
+
+        .card.blue-border { border-left-color: #0f3460; }
+        .card.green-border { border-left-color: #28a745; }
+        .card.yellow-border { border-left-color: #ffc107; }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-green { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .status-red { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-blue { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        th {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            color: #fff;
+            padding: 0.9rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #e94560;
+        }
+
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #eee;
+            color: #555;
+            font-size: 0.92rem;
+        }
+
+        tr:hover { background: #f9f9f9; }
+
+        /* Grid layouts */
+        .grid { display: grid; gap: 1.5rem; margin: 1.5rem 0; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+        /* Diagram */
+        .diagram {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .diagram pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #16213e;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .diagram-layer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .layer-label {
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #16213e;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .arch-box {
+            background: linear-gradient(135deg, #f5f5f5, #fff);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            font-weight: 600;
+            color: #1a1a2e;
+            transition: all 0.3s ease;
+            font-size: 0.92rem;
+        }
+
+        .arch-box:hover {
+            box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .arch-box.foundation {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-color: #0f3460;
+        }
+
+        .arch-box.kirt {
+            background: linear-gradient(135deg, #fff3e0, #fce4ec);
+            border-color: #e94560;
+        }
+
+        .arch-box small {
+            display: block;
+            margin-top: 0.5rem;
+            font-weight: 400;
+            font-size: 0.78rem;
+            color: #666;
+        }
+
+        /* Connector arrows */
+        .connector {
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 1.5rem;
+            color: #e94560;
+            font-weight: 700;
+        }
+
+        /* Pyramid */
+        .pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 2rem auto;
+            max-width: 700px;
+        }
+
+        .pyramid-level {
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: 600;
+            color: #fff;
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .pyramid-level:nth-child(1) {
+            width: 40%;
+            background: #e94560;
+            border-radius: 8px 8px 0 0;
+        }
+        .pyramid-level:nth-child(2) {
+            width: 55%;
+            background: #c73e54;
+        }
+        .pyramid-level:nth-child(3) {
+            width: 70%;
+            background: #0f3460;
+        }
+        .pyramid-level:nth-child(4) {
+            width: 85%;
+            background: #16213e;
+        }
+        .pyramid-level:nth-child(5) {
+            width: 100%;
+            background: #1a1a2e;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .pyramid-level small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.78rem;
+            opacity: 0.85;
+            margin-top: 0.25rem;
+        }
+
+        /* Callout */
+        .callout {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-left: 4px solid #ffc107;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #856404;
+        }
+
+        .callout.info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .callout.danger {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Numbered constraint cards */
+        .constraint-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #e94560;
+            color: #fff;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .constraint-row {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        /* Question category */
+        .question-category {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e94560;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        /* Footer */
+        .footer {
+            margin-left: 280px;
+            padding: 2rem 3rem;
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            color: #a0c4ff;
+            font-size: 0.85rem;
+            text-align: center;
+            border-top: 2px solid #e94560;
+        }
+
+        /* Metric card */
+        .metric-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #e94560;
+        }
+
+        .metric-card .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #e94560;
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* Code-style text */
+        code {
+            font-family: 'Fira Code', monospace;
+            background: #f0f0f0;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #e94560;
+        }
+
+        /* Version timeline */
+        .version-block {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 3px solid #e94560;
+            margin-bottom: 2rem;
+        }
+
+        .version-block::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            background: #e94560;
+            border-radius: 50%;
+            border: 3px solid #f4f6f9;
+        }
+
+        .version-block.shipped::before { background: #28a745; }
+        .version-block.planned::before { background: #ffc107; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>KIRT -- Architecture Reference</h1>
+    <div class="header-subtitle">Knowledge In Real Time -- AI-Powered Intelligence Layer for the Strategic Account Framework</div>
+</div>
+
+<div class="container">
+    <nav class="sidebar">
+        <span class="nav-section-label">Product</span>
+        <div class="nav-item active" onclick="showSection('overview')">Overview</div>
+        <div class="nav-item" onclick="showSection('saf')">SAF Framework</div>
+        <span class="nav-section-label">Architecture</span>
+        <div class="nav-item" onclick="showSection('system-architecture')">System Architecture</div>
+        <div class="nav-item" onclick="showSection('foundation')">Foundation v3</div>
+        <div class="nav-item" onclick="showSection('capabilities')">KIRT Capabilities</div>
+        <span class="nav-section-label">Deliverables</span>
+        <div class="nav-item" onclick="showSection('day1-outputs')">Day-1 Outputs</div>
+        <div class="nav-item" onclick="showSection('scoring')">Scoring Models</div>
+        <span class="nav-section-label">Infrastructure</span>
+        <div class="nav-item" onclick="showSection('data-sources')">Data Sources</div>
+        <div class="nav-item" onclick="showSection('tech-stack')">Tech Stack</div>
+        <div class="nav-item" onclick="showSection('personas')">Personas</div>
+        <span class="nav-section-label">Planning</span>
+        <div class="nav-item" onclick="showSection('roadmap')">Version Roadmap</div>
+        <div class="nav-item" onclick="showSection('constraints')">Design Constraints</div>
+        <div class="nav-item" onclick="showSection('open-questions')">Open Questions</div>
+    </nav>
+
+    <main class="content">
+
+        <!-- ===================== OVERVIEW ===================== -->
+        <div id="overview" class="section active">
+            <h2>Overview</h2>
+            <p>KIRT (Knowledge In Real Time) is the AI-powered intelligence layer for the Strategic Account Framework (SAF). It sits on top of Forge Foundation (v3.0) and automates the manual work of account research, engagement preparation, and deliverable generation.</p>
+            <p>KIRT is not the framework. The SAF defines the process -- KIRT makes it faster. Someone can run the SAF manually with CRM data, web research, and templates. KIRT replaces hours of manual work with minutes of AI-assisted generation.</p>
+
+            <h3>Board Objective</h3>
+            <div class="callout info">
+                <strong>Rusk SAF Directive</strong>
+                Achieve a 25% reduction in cost of sale through AI-powered automation of the Strategic Account Framework.
+            </div>
+
+            <h3>Target Metrics</h3>
+            <div class="grid grid-3">
+                <div class="metric-card">
+                    <div class="metric-value">80%+</div>
+                    <div class="metric-label">Reduction in document preparation and engagement prep time</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">50-70%</div>
+                    <div class="metric-label">Improvement in account intelligence quality</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">25%</div>
+                    <div class="metric-label">Target cost of sale reduction (board objective)</div>
+                </div>
+            </div>
+
+            <h3>Two-Product Architecture</h3>
+            <div class="grid grid-2">
+                <div class="card blue-border">
+                    <h4>Foundation -- Shared Data Platform</h4>
+                    <p>Ingests, normalizes, and serves data. Admin-only, no user surface. Currently v3.0 on Contabo (Forge ecosystem). Target: Azure enterprise.</p>
+                </div>
+                <div class="card">
+                    <h4>KIRT -- Intelligence Layer</h4>
+                    <p>User-facing intelligence layer. Greenfield build. All business logic, classification, scoring, generation, and recommendation happens here.</p>
+                </div>
+            </div>
+
+            <h3>Source-of-Truth Model</h3>
+            <table>
+                <tr><th>System</th><th>Role</th><th>What Lives Here</th></tr>
+                <tr><td><strong>SharePoint</strong></td><td>Document source-of-truth</td><td>Files live here. Templates, proposals, SOWs, deliverables.</td></tr>
+                <tr><td><strong>Foundation</strong></td><td>Raw data source-of-truth</td><td>Ingested, normalized, searchable content. Embeddings, metadata, version chains.</td></tr>
+                <tr><td><strong>KIRT</strong></td><td>Intelligence source-of-truth</td><td>Enrichments, classifications, scores, generated insights.</td></tr>
+            </table>
+            <p>Research, scoring, and intermediate analysis live in the data lake only. Final deliverables write to SharePoint. End users see the deliverable in SP and the full context in KIRT.</p>
+        </div>
+
+        <!-- ===================== SAF FRAMEWORK ===================== -->
+        <div id="saf" class="section">
+            <h2>SAF Framework</h2>
+            <p>KIRT automates the Strategic Account Framework's 6 phases. Each phase has defined inputs, outputs, and manual effort that KIRT replaces.</p>
+
+            <h3>6-Phase Mapping</h3>
+            <table>
+                <tr><th>Phase</th><th>What It Does</th><th>Manual Effort</th><th>What KIRT Does</th></tr>
+                <tr>
+                    <td><strong>1. Account Intelligence</strong></td>
+                    <td>Growth scoring, white space grid, public data</td>
+                    <td>2-4 hrs/account</td>
+                    <td>Auto-generates Account Briefs, monitors public signals, maintains live white space grid, surfaces cross-sell recommendations</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Prepared Engagement</strong></td>
+                    <td>Meeting brief, discovery questions, stakeholder map</td>
+                    <td>1-2 hrs/meeting</td>
+                    <td>Generates Engagement Prep packages, suggests next-best-questions, pre-populates stakeholder maps</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Discovery &amp; Scoring</strong></td>
+                    <td>Signal capture from transcripts, opportunity scoring, maturity gate</td>
+                    <td>30-60 min/meeting</td>
+                    <td>Analyzes transcripts for signals, auto-scores opportunities (human-confirmed), routes intelligence</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Client Deliverables</strong></td>
+                    <td>Reframe deck, assessment kickoff, roadmap, EBR/QBR</td>
+                    <td>2-8 hrs/deliverable</td>
+                    <td>Drafts all formats at 80-90% quality; human refines via inline editing and section regeneration</td>
+                </tr>
+                <tr>
+                    <td><strong>5. Enablement &amp; Progression</strong></td>
+                    <td>Insight drops, win/loss patterns, advancement triggers</td>
+                    <td>Institutional memory</td>
+                    <td>Tracks outcomes, generates QBR/EBR reports, surfaces patterns, monitors triggers</td>
+                </tr>
+                <tr>
+                    <td><strong>6. Continuous Threads</strong></td>
+                    <td>Stakeholder tracking, outcome register, white space, governance</td>
+                    <td>Spreadsheets &amp; tribal knowledge</td>
+                    <td>Centralized, always-current, role-based access to all living artifacts</td>
+                </tr>
+            </table>
+
+            <h3>SAF Pyramid</h3>
+            <div class="diagram">
+                <div class="pyramid">
+                    <div class="pyramid-level">Platform Enablement<small>AI-powered automation layer (KIRT)</small></div>
+                    <div class="pyramid-level">Continuous Threads<small>Stakeholder tracking, outcome register, governance</small></div>
+                    <div class="pyramid-level">Client Deliverables &amp; Enablement<small>Generated docs, insight drops, win/loss patterns</small></div>
+                    <div class="pyramid-level">Discovery &amp; Prepared Engagement<small>Meeting prep, signal capture, scoring</small></div>
+                    <div class="pyramid-level">Foundational -- Account Intelligence<small>Growth scoring, white space, public data, briefs</small></div>
+                </div>
+            </div>
+
+            <h3>Business &amp; Technology Priorities</h3>
+            <div class="grid grid-2">
+                <div class="card blue-border">
+                    <h4>Business Priorities</h4>
+                    <ul>
+                        <li>Reduce cost of sale (25% target)</li>
+                        <li>Accelerate engagement preparation</li>
+                        <li>Improve account intelligence quality</li>
+                        <li>Capture and preserve institutional knowledge</li>
+                        <li>Enable data-driven cross-sell</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Technology Priorities</h4>
+                    <ul>
+                        <li>Build on proven Foundation v3 data platform</li>
+                        <li>Infrastructure-agnostic design (Contabo to Azure)</li>
+                        <li>AD/SSO authentication from day one</li>
+                        <li>LLM-powered classification and generation</li>
+                        <li>Admin-configurable deployment settings</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Solution Domains</h3>
+            <div class="grid grid-3">
+                <div class="card"><h4>Search &amp; Discovery</h4><p>Hybrid search, dedup, knowledge ranking, freshness flagging</p></div>
+                <div class="card"><h4>Document Generation</h4><p>Template-driven LLM generation with provenance tracking</p></div>
+                <div class="card"><h4>Classification</h4><p>Auto-classify uploads by type, route to processing pipelines</p></div>
+                <div class="card"><h4>Scoring &amp; Prioritization</h4><p>Growth, opportunity, and maturity scoring models</p></div>
+                <div class="card"><h4>Recommendation Engine</h4><p>Cross-sell, next-best-question, pattern-based suggestions</p></div>
+                <div class="card"><h4>Admin &amp; Configuration</h4><p>SP paths, scoring weights, catalog management, deployment settings</p></div>
+            </div>
+        </div>
+
+        <!-- ===================== SYSTEM ARCHITECTURE ===================== -->
+        <div id="system-architecture" class="section">
+            <h2>System Architecture</h2>
+
+            <h3>Two-Layer Architecture</h3>
+            <div class="diagram">
+                <div class="diagram-layer">
+                    <div class="layer-label">Source Systems</div>
+                    <div class="arch-box">SharePoint<small>Proposals, SOWs, docs, templates</small></div>
+                    <div class="arch-box">Salesforce<small>2 instances (CSV export)</small></div>
+                    <div class="arch-box">OpenAir<small>Time, project data</small></div>
+                    <div class="arch-box">Public Data APIs<small>SEC, news feeds</small></div>
+                </div>
+                <div class="connector">|</div>
+                <div class="diagram-layer">
+                    <div class="layer-label">Foundation v3.0 -- Shared Data Platform (Admin Only)</div>
+                    <div class="arch-box foundation">REST API<small>13 endpoints</small></div>
+                    <div class="arch-box foundation">Weaviate<small>HNSW + hybrid search</small></div>
+                    <div class="arch-box foundation">Iceberg/Parquet<small>Versioned lakehouse</small></div>
+                    <div class="arch-box foundation">PostgreSQL 16<small>3 databases</small></div>
+                    <div class="arch-box foundation">Redis 7<small>Broker + Streams</small></div>
+                    <div class="arch-box foundation">Dagster<small>6-asset pipeline</small></div>
+                </div>
+                <div class="connector">REST API + Redis Streams</div>
+                <div class="diagram-layer">
+                    <div class="layer-label">KIRT -- Intelligence Layer (User-Facing)</div>
+                    <div class="arch-box kirt">Search Engine<small>Hybrid query, knowledge ranking, dedup</small></div>
+                    <div class="arch-box kirt">Generation Engine<small>LLM-powered, template routing</small></div>
+                    <div class="arch-box kirt">Classification<small>LLM-based auto-classify</small></div>
+                    <div class="arch-box kirt">Scoring Engine<small>Growth, opportunity, maturity</small></div>
+                    <div class="arch-box kirt">Upload Pipeline<small>User files via Foundation ingest</small></div>
+                    <div class="arch-box kirt">Admin / Config<small>SP paths, scoring, catalog</small></div>
+                </div>
+                <div class="connector">Write-back (user-initiated)</div>
+                <div class="diagram-layer">
+                    <div class="layer-label">Outputs</div>
+                    <div class="arch-box">SharePoint<small>Account Briefs, Engagement Preps, Client Docs</small></div>
+                    <div class="arch-box kirt">KIRT UI<small>Search results, account intel, cross-sell</small></div>
+                    <div class="arch-box foundation">Foundation Annotations<small>Classifications, scores, enrichments</small></div>
+                </div>
+            </div>
+
+            <h3>Source-of-Truth Data Flow</h3>
+            <div class="diagram">
+                <pre>SharePoint ---- Document source-of-truth (files live here)
+       |
+       v
+Foundation ---- Raw data source-of-truth (ingested, normalized, searchable)
+       |
+       v
+KIRT ---------- Intelligence source-of-truth (enrichments, scores, classifications)
+       |
+       v
+SharePoint ---- Deliverable output (generated docs written back, user-initiated)</pre>
+            </div>
+
+            <h3>Data Ingestion Model</h3>
+            <div class="grid grid-2">
+                <div class="card blue-border">
+                    <h4>Foundation Front Door</h4>
+                    <p>Systems of record (SharePoint, Salesforce CSV, OpenAir) ingest directly into Foundation via connectors. Scoped SP site with delta sync. CSV exports uploaded to SP site. Data export pipelines.</p>
+                </div>
+                <div class="card">
+                    <h4>KIRT Front Door</h4>
+                    <p>User-generated content (meeting notes, transcripts, ad-hoc documents) uploads through KIRT, which routes to Foundation's <code>POST /v1/ingest/</code> API. KIRT does not maintain a separate document store.</p>
+                </div>
+            </div>
+
+            <h3>Data Flow Directions</h3>
+            <table>
+                <tr><th>From</th><th>To</th><th>Direction</th><th>What Flows</th><th>Method</th></tr>
+                <tr><td>SharePoint</td><td>Foundation</td><td>Read</td><td>Proposals, SOWs, docs, templates</td><td>Scoped SP site connector, delta sync</td></tr>
+                <tr><td>Salesforce</td><td>Foundation</td><td>Read</td><td>Account, pipeline, activity (CSV)</td><td>Report exports uploaded to SP site</td></tr>
+                <tr><td>OpenAir</td><td>Foundation</td><td>Read</td><td>Time entry, project data</td><td>Data export</td></tr>
+                <tr><td>KIRT (user upload)</td><td>Foundation</td><td>Write</td><td>Meeting notes, transcripts, ad-hoc docs</td><td><code>POST /v1/ingest/</code></td></tr>
+                <tr><td>Foundation</td><td>KIRT</td><td>Read</td><td>Search results, doc metadata, enrichments</td><td><code>POST /v1/query/</code>, <code>GET /v1/retrieve/</code>, annotations APIs</td></tr>
+                <tr><td>Foundation</td><td>KIRT</td><td>Event</td><td>New document notifications</td><td>Redis Streams (<code>document.ingested</code>)</td></tr>
+                <tr><td>KIRT</td><td>Foundation</td><td>Write</td><td>Classifications, scores, tags</td><td><code>POST /v1/annotations/</code></td></tr>
+                <tr><td>KIRT</td><td>SharePoint</td><td>Write</td><td>Generated deliverables</td><td>SP API, user-initiated with confirmation</td></tr>
+                <tr><td>M365/Entra</td><td>KIRT / Foundation</td><td>Auth</td><td>JWT claims, group memberships</td><td>Graph API, passed on every request</td></tr>
+            </table>
+
+            <h3>Authentication Flow</h3>
+            <div class="diagram">
+                <pre>User --> M365/Entra (AD/SSO via Graph API) --> KIRT --> Foundation
+  |
+  JWT claims passed to Foundation query API on every request
+  Foundation enforces sp_permissions[] intersection with user's M365 group memberships
+  If a user cannot see a file in SharePoint, they cannot see it in KIRT</pre>
+            </div>
+        </div>
+
+        <!-- ===================== FOUNDATION V3 ===================== -->
+        <div id="foundation" class="section">
+            <h2>Foundation v3</h2>
+            <p>Shared data platform for the Forge consulting ecosystem. Ingests, normalizes, and serves -- consumer apps own all workflow. <span class="status-badge status-green">v3.0 Shipped</span></p>
+
+            <h3>API Surface -- 13 Endpoints</h3>
+            <table>
+                <tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr>
+                <tr><td>POST</td><td><code>/v1/ingest/</code></td><td>Async file ingestion via Dagster pipeline</td></tr>
+                <tr><td>POST</td><td><code>/v1/query/</code></td><td>Hybrid semantic + keyword search with freshness scoring</td></tr>
+                <tr><td>GET</td><td><code>/v1/retrieve/&lt;id&gt;/</code></td><td>Full document metadata and content</td></tr>
+                <tr><td>GET</td><td><code>/v1/list/</code></td><td>Paginated listing with lifecycle/metadata filters</td></tr>
+                <tr><td>DELETE</td><td><code>/v1/delete/&lt;id&gt;/</code></td><td>Soft delete or GDPR hard purge</td></tr>
+                <tr><td>POST</td><td><code>/v1/annotations/</code></td><td>Write classifications, tags, summaries</td></tr>
+                <tr><td>GET</td><td><code>/v1/annotations/</code></td><td>Read annotations for a document</td></tr>
+                <tr><td>GET</td><td><code>/v1/jobs/&lt;id&gt;/</code></td><td>Async job status (Dagster run tracking)</td></tr>
+                <tr><td>GET</td><td><code>/v1/connections/</code></td><td>Connector instance health</td></tr>
+                <tr><td>GET</td><td><code>/v1/auth/permissions/</code></td><td>API key permissions and role</td></tr>
+                <tr><td>GET</td><td><code>/v1/health/&lt;svc&gt;/</code></td><td>Per-service health check</td></tr>
+                <tr><td>GET</td><td><code>/v1/health/quality/</code></td><td>Data quality metrics and drift detection</td></tr>
+                <tr><td>GET</td><td><code>/health/</code></td><td>Quick reachability</td></tr>
+            </table>
+
+            <h3>Key Concepts</h3>
+            <table>
+                <tr><th>Concept</th><th>Detail</th></tr>
+                <tr><td><code>document_id</code></td><td>SHA-256 of (tenant + source_path + content). Content-addressable.</td></tr>
+                <tr><td><code>logical_document_id</code></td><td>SHA-256 of (tenant + source_path). Groups version chains.</td></tr>
+                <tr><td><code>lifecycle_state</code></td><td>active / deleted_at_source / purged / superseded</td></tr>
+                <tr><td><code>embedding_status</code></td><td>pending / embedded / failed / stale</td></tr>
+                <tr><td>Collections</td><td>SemanticChunks (text) + SlideChunks (PPTX with slide metadata)</td></tr>
+                <tr><td>Tenant isolation</td><td>Every query scoped by tenant_id. API keys bound to tenants.</td></tr>
+                <tr><td>Version tracking</td><td>parser_version, chunker_version, embedding_model on every chunk</td></tr>
+            </table>
+
+            <h3>Data Flow Pipeline</h3>
+            <div class="diagram">
+                <pre>Sources (SharePoint, Salesforce CSV, User Uploads via KIRT)
+  |
+  v
+Connectors (MSAL + httpx, delta sync)
+  |
+  v
+REST API --> POST /v1/ingest/
+  |
+  v
+Dagster Pipeline (6-asset ingest chain)
+  |
+  v
+Parse (Docling / LlamaIndex) --> Store Raw (Iceberg/Parquet) --> Chunk (semantic strategies) --> Embed (Ollama nomic-embed) --> Index (Weaviate HNSW)
+  |
+  v
+Shadow Record (PostgreSQL metadata) --> Redis Streams Event (document.ingested)</pre>
+            </div>
+
+            <h3>Foundation Roadmap</h3>
+            <div class="version-block shipped">
+                <h4>v1.0 -- MVP <span class="status-badge status-green">Shipped</span></h4>
+                <p>Core platform: auth, lakehouse, parsing, embedding, vector search, API, connectors</p>
+            </div>
+            <div class="version-block shipped">
+                <h4>v2.0 -- Hardening <span class="status-badge status-green">Shipped</span></h4>
+                <p>Tech debt, multi-user RBAC, SharePoint connector hardening, Polaris catalog</p>
+            </div>
+            <div class="version-block shipped">
+                <h4>v3.0 -- Consumer App Readiness <span class="status-badge status-green">Shipped</span></h4>
+                <p>Dagster orchestration, Redis Streams, annotations, job tracking, data quality, version chains, GDPR purge</p>
+            </div>
+            <div class="version-block planned">
+                <h4>v4.0 -- Platform Maturity <span class="status-badge status-yellow">Planned</span></h4>
+                <p>OpenMetadata governance, automated reconciliation, Spark query engine, advanced lineage</p>
+            </div>
+        </div>
+
+        <!-- ===================== KIRT CAPABILITIES ===================== -->
+        <div id="capabilities" class="section">
+            <h2>KIRT Capabilities</h2>
+
+            <h3>V1 -- MVP (SAF Phases 1-2) <span class="status-badge status-green">In Development</span></h3>
+            <div class="grid grid-2">
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Hybrid Search</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Keyword (BM25) + semantic (vector) + relationship traversal, blended in single query. Results deduplicated, ranked by knowledge hierarchy, freshness-flagged.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Account Brief Generation</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>1-2 page summary in &lt;60 seconds. 9 sections: overview, contacts, priorities, history, opportunities, competitive landscape, strategic notes, white space, action items.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Engagement Prep Generation</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Pre-meeting package: prior work, pain points, stakeholder map, talking points, discovery questions (from 200+ taxonomy), next-best-question suggestions.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Client Deliverable Generation</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Minimal input (company name + keywords) produces client-ready documentation with account history. Lowest friction, highest perceived value.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Cross-Sell Recommendations</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Pattern-based "accounts like this also bought..." using engagement patterns + unstructured signals. Triggered after data ingestion or meeting note upload. Requires the offerings catalog.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Upload &amp; Auto-Classification</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Users upload files through KIRT, routed to Foundation ingest pipeline. LLM-based auto-classification by document type. Manual override for misclassification in V1.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Exact Dedup</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Content-hash detection. 1-result UX with "N copies found" badge. User selects canonical copy. Expanding reveals all source locations.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Human-in-the-Loop Editing</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Inline editing of generated content. Section regeneration with new instructions. User remains in control of final output quality.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Deliverable Write-Back</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Generated docs write to configurable SP output folders. File naming: <code>[Client]-[DocType]-[Date].docx</code>. User-initiated with confirmation step.</p>
+                    </div>
+                </div>
+                <div class="card expandable" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <h4>Admin Config</h4>
+                        <span class="expand-icon">v</span>
+                    </div>
+                    <div class="card-content">
+                        <p>SP paths, directory structures, scoring weights, offerings catalog -- all tunable per deployment without code changes.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>V2 -- Discovery &amp; Scoring (SAF Phase 3) <span class="status-badge status-yellow">Planned</span></h3>
+            <ul>
+                <li>Transcript analysis (speaker diarization, signal extraction, sentiment)</li>
+                <li>Opportunity scoring model (signal-based, human-confirmed)</li>
+                <li>Offering maturity gate (pass/fail before Phase 4 generation)</li>
+                <li>Near-duplicate detection (fuzzy matching via SimHash/MinHash)</li>
+                <li>Version lineage detection (accidental duplication vs. intentional versioning)</li>
+                <li>Cross-format dedup (docx to pdf parity)</li>
+                <li>Persona-based views (EA vs. AE vs. Sales Leadership)</li>
+                <li>Public company monitoring (SEC EDGAR integration)</li>
+                <li>Stale data flagging (&gt;30 days)</li>
+                <li>Automated SF export to narrative account summary pipeline</li>
+            </ul>
+
+            <h3>V3 -- Client Deliverables (SAF Phase 4) <span class="status-badge status-yellow">Planned</span></h3>
+            <ul>
+                <li>Reframe deck generation</li>
+                <li>Assessment kickoff generation</li>
+                <li>Transformation roadmap generation</li>
+                <li>EBR/QBR package generation</li>
+                <li>Agentic RAG (multi-hop retrieval for complex generation)</li>
+                <li>Template management with version control and selection logic</li>
+                <li>Full provenance tracking in generated deliverables</li>
+                <li>Structured win/loss capture with defined template</li>
+            </ul>
+
+            <h3>V4+ -- Enablement &amp; Continuous Threads (SAF Phases 5-6) <span class="status-badge status-yellow">Planned</span></h3>
+            <ul>
+                <li>Insight drops (proactive intelligence delivery)</li>
+                <li>Win/loss pattern analysis (ML-driven)</li>
+                <li>Advancement triggers</li>
+                <li>Stakeholder tracking with change detection</li>
+                <li>Outcome register</li>
+                <li>Governance framework</li>
+                <li>SF direct API (replace CSV)</li>
+                <li>Email/calendar integration</li>
+                <li>MSA opt-out enforcement</li>
+                <li>Multi-agent architecture (specialized agents per SAF phase)</li>
+                <li>Cross-client pattern analysis</li>
+            </ul>
+
+            <h3>Document Classification Table</h3>
+            <table>
+                <tr><th>Type</th><th>Processing Route</th></tr>
+                <tr><td>Meeting notes</td><td>NLP extraction: signals, entities, action items -- Phase 3 signal capture</td></tr>
+                <tr><td>Transcript</td><td>Speaker diarization, signal extraction, sentiment analysis</td></tr>
+                <tr><td>BSE / account profile</td><td>Entity extraction, account linking, white space input</td></tr>
+                <tr><td>SOW / contract</td><td>Offerings linkage, engagement tracking, maturity input</td></tr>
+                <tr><td>Deck / presentation</td><td>Subtype classification (pitch vs. deliverable vs. internal), theme extraction</td></tr>
+                <tr><td>Template</td><td>Mark as template, feed generation pipeline, never modify original</td></tr>
+                <tr><td>KIRT-generated</td><td>Provenance tracking, version control, link to source inputs</td></tr>
+            </table>
+
+            <h3>Search Architecture</h3>
+            <h4>Four Modalities (Single Blended Query)</h4>
+            <table>
+                <tr><th>Modality</th><th>Engine</th><th>Purpose</th></tr>
+                <tr><td>Keyword/phrase</td><td>Weaviate BM25</td><td>Known terms, exact matches</td></tr>
+                <tr><td>Semantic</td><td>Weaviate vector (HNSW)</td><td>Conceptual similarity, natural language</td></tr>
+                <tr><td>Relationship traversal</td><td>Weaviate cross-references</td><td>Entity connections (account to contacts to engagements)</td></tr>
+                <tr><td>Structured filters</td><td>Weaviate + Foundation metadata</td><td>doc_type, date range, client, author, status</td></tr>
+            </table>
+
+            <h4>Knowledge Hierarchy Ranking</h4>
+            <table>
+                <tr><th>Rank</th><th>Source</th><th>Description</th></tr>
+                <tr><td>1</td><td>Account intelligence dossier / brief</td><td>Highest priority -- specific to the account</td></tr>
+                <tr><td>2</td><td>Recent meeting notes and transcripts</td><td>Last 90 days</td></tr>
+                <tr><td>3</td><td>Salesforce data</td><td>Account, opportunity, contact records</td></tr>
+                <tr><td>4</td><td>Public research</td><td>SEC filings, earnings, news</td></tr>
+                <tr><td>5</td><td>Playbooks, battle cards, templates</td><td>Reference material</td></tr>
+            </table>
+
+            <div class="callout info">
+                <strong>Freshness Flagging</strong>
+                Search results and account intelligence surfaces indicate data age. Anything &gt;30 days is flagged as potentially stale.
+            </div>
+        </div>
+
+        <!-- ===================== DAY-1 OUTPUTS ===================== -->
+        <div id="day1-outputs" class="section">
+            <h2>Day-1 Outputs (MVP Deliverables)</h2>
+            <p>These are the four outputs KIRT must generate for the MVP demo. A non-technical stakeholder should watch it and understand the value without explanation.</p>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Account Brief</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p>1-2 page summary generated in &lt;60 seconds. Contains 9 sections:</p>
+                    <ol>
+                        <li><strong>Company overview</strong> -- industry, size, revenue, headquarters</li>
+                        <li><strong>Key contacts</strong> -- names, titles, roles in buying process, relationship status</li>
+                        <li><strong>Business priorities</strong> -- from earnings, 10-K, conversations</li>
+                        <li><strong>Relationship history</strong> -- engagement timeline, past deals, current opportunities</li>
+                        <li><strong>Open opportunities</strong> -- pipeline with stage, value, next steps, risks</li>
+                        <li><strong>Competitive landscape</strong> -- who else, strengths/weaknesses</li>
+                        <li><strong>Strategic notes</strong> -- personal observations, dynamics, sentiment</li>
+                        <li><strong>White space analysis</strong> -- what we sell vs. what this account buys</li>
+                        <li><strong>Action items</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Engagement Prep</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p>Pre-meeting package with 6 components:</p>
+                    <ol>
+                        <li><strong>Prior work</strong> -- history with this account</li>
+                        <li><strong>Known pain points</strong> -- from previous interactions</li>
+                        <li><strong>Stakeholder map</strong> -- pre-populated, user-editable</li>
+                        <li><strong>Recommended talking points</strong></li>
+                        <li><strong>Discovery questions</strong> -- pulled from 200+ question taxonomy, filtered by business/industry/solution modules and mapped to relevant offerings</li>
+                        <li><strong>Next-best-question suggestions</strong> -- based on account context</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Client Deliverable</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p>The canonical adoption use case -- lowest friction, highest perceived value.</p>
+                    <p>AE walks in, inputs company name + a few keywords, generates client-ready documentation with account history. This is the demo moment that proves the value proposition.</p>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Cross-Sell Recommendations</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p>Pattern-based suggestions derived from historical engagement data:</p>
+                    <ul>
+                        <li>"Accounts like this also bought..." using engagement patterns + unstructured signals</li>
+                        <li>Triggered after data ingestion or meeting note upload</li>
+                        <li>Requires the offerings catalog as the reference frame</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Document Generation Lifecycle</h3>
+            <div class="diagram">
+                <pre>User selects account / opportunity
+  --> KIRT pulls applicable template from SP (via Foundation's template canonical)
+  --> KIRT triggers research run (pulls SF data + Foundation knowledge + public data)
+  --> KIRT generates document using LLM
+  --> KIRT writes deliverable to SP (designated output folder)
+  --> Foundation records SP URL in derived_docs[] on the research canonical
+  --> User sees finished document with provenance summary
+  --> User can edit inline or regenerate sections with new instructions</pre>
+            </div>
+
+            <h3>What Lives Where</h3>
+            <table>
+                <tr><th>Content</th><th>Location</th><th>Visibility</th></tr>
+                <tr><td>Research run data</td><td>Iceberg (versioned, auditable)</td><td>Internal only</td></tr>
+                <tr><td>Output document</td><td>SharePoint</td><td>User-accessible, final deliverable</td></tr>
+                <tr><td>Lineage + provenance</td><td>Foundation canonical record</td><td>Surfaced on demand in KIRT</td></tr>
+            </table>
+
+            <h3>SP Output Conventions</h3>
+            <ul>
+                <li>Deliverables write to configurable output folders per account/engagement</li>
+                <li>File naming: <code>[Client]-[DocType]-[Date].docx</code> (e.g., <code>Acme-Corp-Account-Brief-2026-Q1.docx</code>)</li>
+                <li>Shallow folder structures for discoverability (flat over deep)</li>
+                <li>Generated docs favor prose + structured sections over raw tables</li>
+            </ul>
+        </div>
+
+        <!-- ===================== SCORING MODELS ===================== -->
+        <div id="scoring" class="section">
+            <h2>Scoring Models</h2>
+            <p>Three scoring models drive SAF phases. All need at least v0.1 definitions before building the features that consume them.</p>
+
+            <div class="grid grid-3">
+                <div class="card">
+                    <h4>Growth Scoring <span class="status-badge status-blue">Phase 1</span></h4>
+                    <p><strong>Purpose:</strong> Account-level score driving tier assignment and prioritization.</p>
+                    <p><strong>Inputs:</strong> Revenue, strategic value, relationship depth, engagement frequency, white space size.</p>
+                    <p><strong>Output:</strong> Tier assignment (Tier 1/2/3) determining which accounts get full treatment.</p>
+                    <p><strong>V1 Approach:</strong> Simplified weighted formula, tunable via admin settings.</p>
+                </div>
+                <div class="card">
+                    <h4>Opportunity Scoring <span class="status-badge status-blue">Phase 3</span></h4>
+                    <p><strong>Purpose:</strong> Signal-based scoring from meeting transcripts and engagement data.</p>
+                    <p><strong>Inputs:</strong> Meeting signals, engagement recency, competitive mentions, stakeholder sentiment, deal stage progression.</p>
+                    <p><strong>Output:</strong> Opportunity score with human confirmation step.</p>
+                    <p><strong>V1 Approach:</strong> Pre-computed at ingest time, stored in Foundation annotations.</p>
+                </div>
+                <div class="card">
+                    <h4>Offering Maturity <span class="status-badge status-blue">Phase 3</span></h4>
+                    <p><strong>Purpose:</strong> Gates whether an offering is ready to propose to a specific account.</p>
+                    <p><strong>Inputs:</strong> Offering readiness, delivery track record, available resources, market fit.</p>
+                    <p><strong>Output:</strong> Pass/fail gate before Phase 4 deliverable generation.</p>
+                    <p><strong>V1 Approach:</strong> Manual rating in the offerings catalog, surfaced in KIRT.</p>
+                </div>
+            </div>
+
+            <h3>Offerings Catalog Dependency</h3>
+            <div class="callout danger">
+                <strong>Biggest Content Blocker</strong>
+                The offerings catalog is foundational. White space grid, scoring, cross-sell, and discovery questions all depend on it. It does not exist yet -- this is the single biggest content dependency. The catalog is a content asset, not a KIRT feature. KIRT consumes it. Building and maintaining it is an operational responsibility (admin/settings, configurable per deployment).
+            </div>
+            <p>The catalog must define:</p>
+            <ul>
+                <li>Solution domains and individual offerings within each domain</li>
+                <li>Maturity rating per offering (ready to sell, emerging, sunset)</li>
+                <li>Mapping to discovery question modules (which questions surface which offerings)</li>
+                <li>Versioning (offerings evolve; catalog needs point-in-time snapshots)</li>
+            </ul>
+        </div>
+
+        <!-- ===================== DATA SOURCES ===================== -->
+        <div id="data-sources" class="section">
+            <h2>Data Sources</h2>
+
+            <h3>Phase 1 -- Current</h3>
+            <table>
+                <tr><th>Source</th><th>Method</th><th>Content</th><th>Status</th></tr>
+                <tr>
+                    <td>SharePoint</td>
+                    <td>Scoped SP site, opt-in</td>
+                    <td>Proposals, SOWs, architecture docs</td>
+                    <td><span class="status-badge status-green">Confirmed</span></td>
+                </tr>
+                <tr>
+                    <td>Salesforce (CSV)</td>
+                    <td>Report exports to SP site</td>
+                    <td>Account data, pipeline, activity history</td>
+                    <td><span class="status-badge status-green">Confirmed</span></td>
+                </tr>
+                <tr>
+                    <td>OpenAir</td>
+                    <td>Data export</td>
+                    <td>Time entry, project data</td>
+                    <td><span class="status-badge status-green">Confirmed</span></td>
+                </tr>
+                <tr>
+                    <td>User uploads</td>
+                    <td>Via KIRT, routed to Foundation <code>POST /v1/ingest/</code></td>
+                    <td>Meeting notes, transcripts, ad-hoc documents</td>
+                    <td><span class="status-badge status-green">Confirmed</span></td>
+                </tr>
+            </table>
+
+            <h3>Phase 2+ -- Future</h3>
+            <table>
+                <tr><th>Source</th><th>Method</th><th>Status</th><th>Version</th></tr>
+                <tr>
+                    <td>Salesforce API (direct)</td>
+                    <td>Real-time account data (replaces CSV)</td>
+                    <td><span class="status-badge status-red">Deferred</span></td>
+                    <td>V4+</td>
+                </tr>
+                <tr>
+                    <td>Email / Calendar</td>
+                    <td>Meeting scheduling, correspondence signals</td>
+                    <td><span class="status-badge status-red">Deferred</span></td>
+                    <td>V4+</td>
+                </tr>
+                <tr>
+                    <td>Industry / News feeds</td>
+                    <td>M&amp;A, regulatory, competitive intelligence</td>
+                    <td><span class="status-badge status-yellow">Planned</span></td>
+                    <td>V2 (SEC EDGAR)</td>
+                </tr>
+            </table>
+
+            <h3>Salesforce Relationship</h3>
+            <div class="callout info">
+                <strong>KIRT complements Salesforce -- it does not replace it.</strong>
+                SF stays as system of record for structured CRM data. KIRT handles unstructured analysis, semantic search, AI generation, and pattern intelligence.
+            </div>
+            <div class="grid grid-2">
+                <div class="card blue-border">
+                    <h4>Stays in Salesforce</h4>
+                    <ul>
+                        <li>Account records, pipeline, activity history, forecasting</li>
+                        <li>Contact management, standard reporting</li>
+                        <li>Workflow automation on structured data</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>KIRT Adds</h4>
+                    <ul>
+                        <li>Unstructured data analysis, semantic search</li>
+                        <li>AI-generated deliverables, pattern recommendations</li>
+                        <li>Cross-sell engine, tribal knowledge capture</li>
+                    </ul>
+                </div>
+            </div>
+            <p>KIRT reads from SF (CSV exports for V1, direct API for V4+). KIRT enriches what SF has. KIRT generates deliverables that SF cannot. If/when a single normalized SF tenant exists, KIRT's value increases -- clean data means better intelligence.</p>
+        </div>
+
+        <!-- ===================== TECH STACK ===================== -->
+        <div id="tech-stack" class="section">
+            <h2>Tech Stack</h2>
+
+            <h3>Shared Infrastructure</h3>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h4>Azure <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Target cloud platform. Current deployment on Contabo (Forge ecosystem). Migration planned.</p>
+                </div>
+                <div class="card">
+                    <h4>AD/SSO via Graph API <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>M365/Entra identity. JWT claims enforce SP permission model. KIRT delegates entirely to Foundation's permission gate.</p>
+                </div>
+                <div class="card">
+                    <h4>Weaviate <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>HNSW + hybrid search. Semantic search, RAG, relationship traversal. V1 solution, evaluate alternatives only if insufficient.</p>
+                </div>
+                <div class="card">
+                    <h4>PostgreSQL 16 <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>3 databases: foundation, polaris, dagster. Shadow records, metadata, pipeline state.</p>
+                </div>
+                <div class="card">
+                    <h4>Redis 7 <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Task queue broker (Celery) + event streaming (Redis Streams). <code>document.ingested</code> events for near-real-time updates.</p>
+                </div>
+                <div class="card">
+                    <h4>Architecture Pattern <span class="status-badge status-blue">Info</span></h4>
+                    <p>API-first design. Foundation exposes REST APIs; consumer apps (KIRT) call them. Separation of concerns: Foundation = data, KIRT = intelligence.</p>
+                </div>
+            </div>
+
+            <h3>Foundation Stack</h3>
+            <div class="grid grid-2">
+                <div class="card blue-border">
+                    <h4>Backend <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Django (gunicorn, 3 workers). SSO integration, data ingestion APIs. MCP-native architecture.</p>
+                </div>
+                <div class="card blue-border">
+                    <h4>Storage <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Apache Iceberg / Parquet on Azure Blob (target), local filesystem (current). Versioned lakehouse. Polaris REST catalog on port 8181.</p>
+                </div>
+                <div class="card blue-border">
+                    <h4>Orchestration <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Dagster webserver + daemon. 6-asset ingest pipeline. Celery + Redis 7 (prefork, 4 procs, 4 queues).</p>
+                </div>
+                <div class="card blue-border">
+                    <h4>Embedding <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Ollama nomic-embed-text (768-dim). Current: local. Target: Azure OpenAI or self-hosted.</p>
+                </div>
+            </div>
+
+            <h3>KIRT Stack (Greenfield)</h3>
+            <div class="grid grid-2">
+                <div class="card">
+                    <h4>Frontend <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>React + Vite + Tailwind + Shadcn. Modern SPA with component library.</p>
+                </div>
+                <div class="card">
+                    <h4>Backend <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Django, MCP-native. LLM-powered classification, generation, and scoring engines.</p>
+                </div>
+                <div class="card">
+                    <h4>Data Access <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>Foundation REST API (13 endpoints). No direct Weaviate, Iceberg, or PostgreSQL access.</p>
+                </div>
+                <div class="card">
+                    <h4>Auth <span class="status-badge status-green">Confirmed</span></h4>
+                    <p>AD/SSO via Graph API (inherited from Foundation). JWT claims passed on every request.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== PERSONAS ===================== -->
+        <div id="personas" class="section">
+            <h2>Personas</h2>
+            <p>Five primary personas define how KIRT surfaces information and prioritizes features.</p>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Architect / Enterprise Architect (EA)</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>Primary Need:</strong> Deep account intelligence for strategic planning and solution design.</p>
+                    <ul>
+                        <li>Full Account Briefs with white space analysis and competitive landscape</li>
+                        <li>Cross-client pattern analysis ("what have we done at similar accounts?")</li>
+                        <li>Technology stack and maturity assessments</li>
+                        <li>Transformation roadmap inputs</li>
+                        <li>Historical engagement context for solution design</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Solution Specialist</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>Primary Need:</strong> Targeted intelligence for specific solution domains and offerings.</p>
+                    <ul>
+                        <li>Offering-specific engagement history</li>
+                        <li>Discovery questions filtered by solution domain</li>
+                        <li>Competitive positioning for their specialization</li>
+                        <li>Maturity assessments for their offering area</li>
+                        <li>Cross-sell opportunities within their domain</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Account Executive (AE)</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>Primary Need:</strong> Fast engagement preparation and client-ready deliverables.</p>
+                    <ul>
+                        <li>Quick Account Briefs for meeting prep</li>
+                        <li>Engagement Prep packages with discovery questions</li>
+                        <li>Client Deliverable generation (company name + keywords = client-ready doc)</li>
+                        <li>Cross-sell recommendations to expand wallet share</li>
+                        <li>Stakeholder maps and relationship tracking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Sales Leadership</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>Primary Need:</strong> Portfolio-level visibility and strategic account prioritization.</p>
+                    <ul>
+                        <li>Growth scoring and tier assignments across accounts</li>
+                        <li>Pipeline health and opportunity scoring</li>
+                        <li>Win/loss patterns and advancement triggers</li>
+                        <li>QBR/EBR report generation</li>
+                        <li>Cross-account pattern analysis for strategic decisions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card expandable" onclick="toggleCard(this)">
+                <div class="card-header">
+                    <h4>Delivery / PM</h4>
+                    <span class="expand-icon">v</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>Primary Need:</strong> Engagement context and historical delivery intelligence.</p>
+                    <ul>
+                        <li>Past engagement details for active accounts</li>
+                        <li>SOW and contract history</li>
+                        <li>Resource allocation patterns (via OpenAir data)</li>
+                        <li>Outcome register and win wires for similar engagements</li>
+                        <li>Institutional knowledge capture from project wrap-up</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== VERSION ROADMAP ===================== -->
+        <div id="roadmap" class="section">
+            <h2>Version Roadmap</h2>
+
+            <div class="version-block shipped">
+                <h3>V1 -- MVP <span class="status-badge status-green">In Development</span></h3>
+                <p><strong>SAF Phases 1-2:</strong> Account Intelligence + Prepared Engagement</p>
+                <p><strong>Goal:</strong> Credible demo of account intelligence and engagement prep. Non-technical stakeholder watches it and understands the value without explanation. Runs reliably on 3 consecutive attempts.</p>
+
+                <h4>V1 Delivers</h4>
+                <ul>
+                    <li>SSO login (live AD/SSO)</li>
+                    <li>Hybrid search (keyword + semantic, deduplicated results, freshness indicators)</li>
+                    <li>Account Brief generation (&lt;60 seconds)</li>
+                    <li>Engagement Prep generation (meeting brief + discovery questions + stakeholder map)</li>
+                    <li>Cross-sell recommendations (pattern-based)</li>
+                    <li>Document upload, Foundation ingest, auto-classification</li>
+                    <li>Meeting note upload, signal extraction, account enrichment</li>
+                    <li>Exact duplicate detection (content hash), 1-result UX with "N copies" badge</li>
+                    <li>Human-in-the-loop editing (inline edit, section regeneration)</li>
+                    <li>Deliverable write-back to SP output folders</li>
+                    <li>Admin-configurable settings (SP paths, directory structures, scoring weights)</li>
+                </ul>
+
+                <h4>V1 Explicitly Defers</h4>
+                <ul>
+                    <li>Opportunity scoring, maturity gate</li>
+                    <li>Reframe decks, assessment kickoffs</li>
+                    <li>Agentic RAG</li>
+                    <li>Near-duplicate detection</li>
+                    <li>SF direct API, email/calendar</li>
+                    <li>Persona-based views, proactive alerting</li>
+                    <li>Production-scale deployment, Azure migration</li>
+                </ul>
+
+                <h4>V1 Demo Data</h4>
+                <p>Synthetic data for 3-4 demo accounts covering public/private x new/existing matrix. SF data via CSV export. Include clean + messy accounts to demonstrate KIRT's value in both scenarios.</p>
+            </div>
+
+            <div class="version-block planned">
+                <h3>V2 -- Discovery &amp; Scoring <span class="status-badge status-yellow">Planned</span></h3>
+                <p><strong>SAF Phase 3:</strong> Discovery &amp; Scoring</p>
+                <p>Adds transcript analysis, opportunity scoring, offering maturity gate, near-duplicate detection, cross-format dedup, version lineage, persona-based views, SEC EDGAR integration, stale data flagging, automated SF export pipeline.</p>
+            </div>
+
+            <div class="version-block planned">
+                <h3>V3 -- Client Deliverables <span class="status-badge status-yellow">Planned</span></h3>
+                <p><strong>SAF Phase 4:</strong> Client Deliverables</p>
+                <p>Adds reframe deck generation, assessment kickoff, transformation roadmap, EBR/QBR packages, agentic RAG, template management with version control, full provenance tracking, structured win/loss capture.</p>
+            </div>
+
+            <div class="version-block planned">
+                <h3>V4+ -- Enablement &amp; Continuous Threads <span class="status-badge status-yellow">Planned</span></h3>
+                <p><strong>SAF Phases 5-6:</strong> Enablement, Continuous Threads, Platform Maturity</p>
+                <p>Adds insight drops, win/loss patterns (ML-driven), advancement triggers, stakeholder tracking with change detection, outcome register, governance framework, SF direct API, email/calendar integration, MSA opt-out enforcement, multi-agent architecture, cross-client pattern analysis.</p>
+            </div>
+
+            <h3>Foundation v3 vs. v4 Dependency</h3>
+            <table>
+                <tr><th>KIRT Version</th><th>Foundation Dependency</th><th>Notes</th></tr>
+                <tr>
+                    <td><strong>V1</strong></td>
+                    <td><span class="status-badge status-green">Fully buildable on v3</span></td>
+                    <td>All 13 REST API endpoints, Weaviate HNSW + hybrid search, Iceberg versioned storage, Redis Streams, SP permission enforcement, Dagster orchestration</td>
+                </tr>
+                <tr>
+                    <td><strong>V2</strong></td>
+                    <td><span class="status-badge status-yellow">Harder without v4</span></td>
+                    <td>v4 automated reconciliation useful for near-duplicate management at scale. v4 Spark query engine useful for scoring aggregations.</td>
+                </tr>
+                <tr>
+                    <td><strong>V3</strong></td>
+                    <td><span class="status-badge status-yellow">Benefits from v4</span></td>
+                    <td>v4 advanced lineage useful for full provenance tracking in generated deliverables.</td>
+                </tr>
+                <tr>
+                    <td><strong>V4+</strong></td>
+                    <td><span class="status-badge status-yellow">Benefits from v4</span></td>
+                    <td>v4 OpenMetadata governance useful for self-service data governance.</td>
+                </tr>
+            </table>
+            <p><strong>Recommendation:</strong> Build KIRT V1 on Foundation v3 now. Plan Foundation v4 work in parallel with KIRT V2 planning so v4 capabilities land before KIRT needs them at scale.</p>
+
+            <h3>Current State vs. Target State</h3>
+            <table>
+                <tr><th>Aspect</th><th>Current (Contabo)</th><th>Target (Azure)</th></tr>
+                <tr><td>Hosting</td><td>Contabo VPS (CVPS1 + CVPS2)</td><td>Azure cloud services</td></tr>
+                <tr><td>Authentication</td><td>Token-based</td><td>AD/SSO via Graph API</td></tr>
+                <tr><td>Object storage</td><td>Local filesystem / Contabo disks</td><td>Azure Blob Storage</td></tr>
+                <tr><td>Iceberg catalog</td><td>Polaris Catalog (self-hosted)</td><td>TBD -- Azure-native or managed Polaris</td></tr>
+                <tr><td>Orchestration</td><td>Dagster (self-hosted)</td><td>TBD -- Dagster Cloud or self-managed</td></tr>
+                <tr><td>Task queue</td><td>Celery + Redis (self-hosted)</td><td>TBD -- Azure-managed or self-hosted</td></tr>
+                <tr><td>Embedding model</td><td>Ollama (nomic-embed-text, local)</td><td>TBD -- Azure OpenAI or self-hosted</td></tr>
+                <tr><td>Database</td><td>PostgreSQL 16 (self-hosted)</td><td>TBD -- Azure Database for PostgreSQL</td></tr>
+                <tr><td>Network</td><td>Contabo internal + Tailscale VPN</td><td>Azure VNets + AD-integrated access</td></tr>
+                <tr><td>DNS</td><td>Cloudflare (roybales.com)</td><td>Pellera enterprise domain (TBD)</td></tr>
+            </table>
+
+            <div class="callout info">
+                <strong>KIRT is infrastructure-agnostic.</strong>
+                KIRT communicates with Foundation via REST API only. When Foundation migrates from Contabo to Azure, KIRT's only change is the API base URL and switching to Azure AD tokens. KIRT V1 can demo on Contabo while Azure migration is planned separately.
+            </div>
+        </div>
+
+        <!-- ===================== DESIGN CONSTRAINTS ===================== -->
+        <div id="constraints" class="section">
+            <h2>Design Constraints</h2>
+            <p>Nine key design constraints govern KIRT's architecture and behavior.</p>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">1</span>
+                    <div>
+                        <h4>Foundation owns all document storage.</h4>
+                        <p>Users upload files through KIRT, which routes them to Foundation via <code>POST /v1/ingest/</code>. KIRT does not maintain its own document store — Foundation is the single storage layer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">2</span>
+                    <div>
+                        <h4>SP files are never modified by Foundation.</h4>
+                        <p>Enrichments live in Foundation only. KIRT writes new files to SP (deliverables); it does not edit source files unless the user explicitly initiates a write-back to a specific canonical source_ref.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">3</span>
+                    <div>
+                        <h4>Dedup is invisible to the user by default.</h4>
+                        <p>1 result per logical document. The N-copies detail is accessible but not the default view.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">4</span>
+                    <div>
+                        <h4>Users never see the research process, only the output.</h4>
+                        <p>Iceberg snapshots are internal audit/versioning infrastructure, not user-facing content.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">5</span>
+                    <div>
+                        <h4>Permission inheritance is strict.</h4>
+                        <p>KIRT never surfaces a document the user could not access in its source system. Enforced pre-query in Foundation, not post-fetch in KIRT.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">6</span>
+                    <div>
+                        <h4>Archival is normalization, not deletion.</h4>
+                        <p>Archived SP files remain untouched. Foundation stops treating them as live canonical sources. Stale source alerts if an archived file gets edited.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">7</span>
+                    <div>
+                        <h4>Write-back to SP is explicit and user-initiated.</h4>
+                        <p>Every write to SP (deliverable generation, canonical update) is a deliberate user action with a confirmation step.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">8</span>
+                    <div>
+                        <h4>KIRT complements Salesforce, never replaces it.</h4>
+                        <p>SF stays as system of record for structured CRM data. KIRT handles unstructured analysis, semantic search, AI generation, and pattern intelligence.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="constraint-row">
+                    <span class="constraint-number">9</span>
+                    <div>
+                        <h4>Admin-configurable deployment settings.</h4>
+                        <p>Directory structures, SP output paths, scoring model weights, offerings catalog, and data source configurations must be tunable per deployment without code changes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== OPEN QUESTIONS ===================== -->
+        <div id="open-questions" class="section">
+            <h2>Open Questions</h2>
+            <p>These items need design sessions before they can be locked into the spec. <span class="status-badge status-yellow">Requires Gough/R Solutioning</span></p>
+
+            <div class="question-category">Architecture &amp; Platform</div>
+            <div class="card">
+                <ul>
+                    <li>Web app, Teams tab, or SP add-in? (Roadmap assumes web app -- React/Vite -- but needs confirmation)</li>
+                    <li>Offline / degraded mode when Foundation is unavailable</li>
+                    <li>Multi-tenancy model (single-tenant Pellera only, or designed for multi-tenant from the start?)</li>
+                    <li>Content versioning within KIRT (regenerated briefs -- version history in KIRT or only SP?)</li>
+                    <li>LLM provider strategy (Azure OpenAI, Claude API, Gemini, or model-agnostic via LiteLLM proxy?)</li>
+                </ul>
+            </div>
+
+            <div class="question-category">UX &amp; Data</div>
+            <div class="card">
+                <ul>
+                    <li>KIRT user permission model within Pellera (all users see everything, or role-based within KIRT?)</li>
+                    <li>Persona definitions (6 defined but not validated -- EA, AE, Sales Leadership, Practice Lead, others)</li>
+                    <li>Feedback loop / learning (does KIRT learn from user edits to generated deliverables?)</li>
+                    <li>Notification model (new data available, brief is stale -- push, dashboard, email?)</li>
+                    <li>Concurrent editing (two users generating for same account simultaneously)</li>
+                    <li>Mobile experience requirements</li>
+                </ul>
+            </div>
+
+            <div class="question-category">Compliance &amp; Operations</div>
+            <div class="card">
+                <ul>
+                    <li>MSA opt-out scope (no AI processing, or no ingest at all?)</li>
+                    <li>Data retention / GDPR purge cascade from Foundation to KIRT enrichments</li>
+                    <li>Monitoring and observability for KIRT itself</li>
+                    <li>Accessibility requirements (WCAG)</li>
+                    <li>Performance targets beyond Account Brief &lt;60s (search latency, page load, concurrent users)</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div class="footer">
+    KIRT Architecture Reference -- Generated 2026-03-24 -- Aligned to kirt-spec-seed.md
+</div>
+
+<script>
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(function(s) {
+            s.classList.remove('active');
+        });
+        // Deactivate all nav items
+        document.querySelectorAll('.nav-item').forEach(function(n) {
+            n.classList.remove('active');
+        });
+        // Show target section
+        var target = document.getElementById(sectionId);
+        if (target) {
+            target.classList.add('active');
+        }
+        // Activate the clicked nav item
+        var navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(function(n) {
+            if (n.getAttribute('onclick') && n.getAttribute('onclick').indexOf(sectionId) !== -1) {
+                n.classList.add('active');
+            }
+        });
+        // Scroll content to top
+        document.querySelector('.content').scrollTop = 0;
+        window.scrollTo(0, 0);
+    }
+
+    function toggleCard(card) {
+        card.classList.toggle('collapsed');
+    }
+
+    // Initialize: show overview
+    document.addEventListener('DOMContentLoaded', function() {
+        showSection('overview');
+    });
+</script>
+
+</body>
+</html>

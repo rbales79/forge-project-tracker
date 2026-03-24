@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project KIRT Architecture Reference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(22, 33, 62, 0.98), rgba(15, 52, 96, 0.98));
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #e94560;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #e94560;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #e94560;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-subtitle {
+            color: #a0c4ff;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #16213e 0%, #0f3460 100%);
+            border-right: 1px solid rgba(233, 69, 96, 0.2);
+            padding: 2rem 0;
+            overflow-y: auto;
+            position: fixed;
+            height: calc(100vh - 120px);
+            left: 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 3px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #a0c4ff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(233, 69, 96, 0.1);
+            border-left-color: #e94560;
+            padding-left: 1.75rem;
+        }
+
+        .nav-item.active {
+            background: rgba(233, 69, 96, 0.15);
+            border-left-color: #e94560;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 3rem;
+            max-width: 100%;
+            background: #f4f6f9;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section Styles */
+        .section h2 {
+            font-size: 2.5rem;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .section h3 {
+            font-size: 1.5rem;
+            color: #16213e;
+            margin: 2rem 0 1rem;
+            font-weight: 600;
+        }
+
+        .section p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #e94560;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card.expandable {
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card h4 {
+            font-size: 1.2rem;
+            color: #1a1a2e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .card.collapsed .card-content {
+            max-height: 0;
+        }
+
+        .expand-icon {
+            color: #e94560;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .card.collapsed .expand-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-green {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-yellow {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-red {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-blue {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status-purple {
+            background: #e2d5f3;
+            color: #3e2c6a;
+            border: 1px solid #d4c1f9;
+        }
+
+        .status-orange {
+            background: #ffe8d6;
+            color: #7d4606;
+            border: 1px solid #ffcc99;
+        }
+
+        .status-teal {
+            background: #d1f2eb;
+            color: #0d5554;
+            border: 1px solid #a8e6e1;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        th {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            color: #fff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e94560;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        /* Grid layouts */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        /* Architecture Diagram */
+        .diagram {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .diagram-layer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .layer-label {
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #16213e;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .arch-box {
+            background: linear-gradient(135deg, #f5f5f5, #fff);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            color: #1a1a2e;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .arch-box:hover {
+            box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .arch-box.foundation {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-color: #0f3460;
+        }
+
+        .arch-box.intel {
+            background: linear-gradient(135deg, #fff3e0, #fce4ec);
+            border-color: #e94560;
+        }
+
+        /* Pipeline */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 2rem 0;
+            justify-content: space-between;
+        }
+
+        .pipeline-stage {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .pipeline-stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .pipeline-stage h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .pipeline-stage p {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        .pipeline-arrow {
+            flex: 0 0 auto;
+            font-size: 2rem;
+            color: #e94560;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-left: 60px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            background: #e94560;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #e94560;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 29px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% + 2rem);
+            background: linear-gradient(to bottom, #e94560, transparent);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-content {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .column-title {
+            grid-column: 1 / -1;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .column {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .column h4 {
+            font-size: 1.2rem;
+            color: #16213e;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .column li {
+            padding: 0.75rem 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .column li:last-child {
+            border-bottom: none;
+        }
+
+        .column li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        /* Severity Indicator */
+        .severity {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+
+        .severity-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .severity-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .severity-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .content {
+                margin-left: 240px;
+                padding: 2rem;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+                padding: 1rem 0;
+                display: flex;
+                overflow-x: auto;
+                overflow-y: visible;
+            }
+
+            .nav-item {
+                padding: 0.75rem 1.25rem;
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+
+            .nav-item:hover, .nav-item.active {
+                border-left: none;
+                border-bottom-color: #e94560;
+                padding-left: 1.25rem;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .section h2 {
+                font-size: 1.8rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .pipeline {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .pipeline-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d63548;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Project KIRT</h1>
+        <div class="header-subtitle">Knowledge In Real Time — Strategic Account Framework Architecture Reference</div>
+    </div>
+
+    <div class="container">
+        <nav class="sidebar">
+            <a class="nav-item active" data-section="overview">Overview</a>
+            <a class="nav-item" data-section="safframework">SAF Pyramid & Priorities</a>
+            <a class="nav-item" data-section="architecture">System Architecture</a>
+            <a class="nav-item" data-section="dataflow">Data Flow</a>
+            <a class="nav-item" data-section="datasources">Data Sources</a>
+            <a class="nav-item" data-section="techstack">Technical Stack</a>
+            <a class="nav-item" data-section="personas">Personas & Workflows</a>
+            <a class="nav-item" data-section="deliverables">Outputs & Deliverables</a>
+            <a class="nav-item" data-section="mvpscope">MVP Scope</a>
+            <a class="nav-item" data-section="adoption">Adoption Strategy</a>
+            <a class="nav-item" data-section="timeline">Crawl-Walk-Run Timeline</a>
+            <a class="nav-item" data-section="risks">Risks & Gaps</a>
+        </nav>
+
+        <div class="content">
+            <!-- Overview -->
+            <section id="overview" class="section active">
+                <h2>Project Overview</h2>
+                <p>Project KIRT (Knowledge In Real Time) is an AI-powered Strategic Account Framework that moves Pellera from reactive selling to proactive value creation across Enterprise-Signature Accounts (top 20%). It enables joint accountability between sales and technical teams by mapping every engagement against Pellera's solution domains.</p>
+
+                <div class="grid grid-2">
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>Board Objective: 25% Cost of Sale Reduction</h4>
+                        <p>The board is targeting a 25% reduction in cost of sale and wants to see more internal systems leveraging AI across the organization.</p>
+                        <span class="status-badge status-green">Board Mandate</span>
+                    </div>
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>Jeff Rusk: Strategic Account Framework</h4>
+                        <p>Jeff Rusk wants a Strategic Account Framework to help grow strategic accounts. He has directed Carlos Marques and his EA team to own it. Primary focus: Managed Services and Security practices.</p>
+                        <span class="status-badge status-green">Strategic Sponsor</span>
+                    </div>
+                    <div class="card" style="border-left-color: #e94560;">
+                        <h4>Crawl-Walk-Run Timeline</h4>
+                        <p><strong>Phase 1 (Crawl):</strong> Weeks 1–6 — Prove concept with PTA/EA team, synthetic data, security review</p>
+                        <p><strong>Phase 2 (Walk):</strong> Months 2–4 — Working MVP, expand to SSs + AEs, stakeholder progress update ~8 weeks</p>
+                        <p><strong>Phase 3 (Run):</strong> Months 5–12+ — Full-scale deployment, BSE/SOW, 300–500 user rollout</p>
+                        <span class="status-badge status-green">Phase 1 Active</span>
+                    </div>
+                </div>
+
+                <h3>Strategy Session Attendees (March 11)</h3>
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>Roy Bales</h4>
+                        <p><strong>Principal Technical Advisor / Enterprise Architect — AI Tool Development</strong></p>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Framework design, technical architecture, AI tool development.</p>
+                        <span class="status-badge status-green">Enterprise Architecture</span>
+                    </div>
+                    <div class="card">
+                        <h4>Dr. Jonathan Gough</h4>
+                        <p><strong>AI Solution Specialist and Internal AI Systems Lead</strong></p>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Leads internal AI initiatives and platforms. AI tool development.</p>
+                        <span class="status-badge status-blue">AI & Solutions</span>
+                    </div>
+                    <div class="card">
+                        <h4>Carlos Marques</h4>
+                        <p><strong>EVP Enterprise Architecture — Strategic Accounts Framework Sponsor</strong></p>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Executive sponsor for the Strategic Account Framework and KIRT initiative.</p>
+                        <span class="status-badge status-green">Executive Sponsor</span>
+                    </div>
+                    <div class="card">
+                        <h4>Caleb Crisci</h4>
+                        <p><strong>Principal Technical Advisor / Enterprise Architect — Consulting, Process, and Deliverables</strong></p>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Consulting, process, and deliverables.</p>
+                        <span class="status-badge status-blue">Enterprise Architecture</span>
+                    </div>
+                </div>
+                
+                <div class="card" style="border-left-color: #e94560; margin-top: 1rem;">
+                    <p><strong>Foundation + KIRT answer both objectives — and can deliver far more.</strong> The two-product architecture provides the data infrastructure (Foundation) and the intelligence layer (KIRT) to reduce cost of sale through automation while simultaneously enabling deeper, more strategic account engagement that drives growth. KIRT supports the full <strong>Propose → Close → Grow</strong> progression: surfacing opportunities, accelerating deliverables, and identifying expansion paths within existing accounts.</p>
+                </div>
+
+                <h3>Crawl-Walk-Run Implementation Timeline</h3>
+                <div class="grid">
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>🏗️ Phase 1: Crawl (Weeks 1–6)</h4>
+                        <p><strong>Objective:</strong> Prove the concept with the PTA/EA team using minimal infrastructure and publicly available data.</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                            <li>Definition document — codify what KIRT is, what it's not, who it serves</li>
+                            <li>Collect sample deliverables from all PTA architects</li>
+                            <li>Collate questionnaires into unified template</li>
+                            <li>Build initial demo using synthetic data (research-to-deliverable pipeline)</li>
+                            <li>SharePoint site + Teams channel setup</li>
+                            <li>Security review with Sean Colicchio</li>
+                            <li>Schedule checkpoint with Jeff Rusk</li>
+                        </ul>
+                        <span class="status-badge status-green" style="margin-top: 1rem;">Active</span>
+                    </div>
+                    <div class="card" style="border-left-color: #fd7e14;">
+                        <h4>🚶 Phase 2: Walk (Months 2–4)</h4>
+                        <p><strong>Objective:</strong> Expand data integration, broaden user base, and add intelligence features.</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                            <li>Working MVP with 5–10 real accounts for PTA steering committee</li>
+                            <li>Expand from EAs to Solution Specialists and AEs + Sales Managers</li>
+                            <li>Iterate on output format and questionnaire based on feedback</li>
+                            <li>Stakeholder progress update (~8 weeks)</li>
+                            <li>Present to Adam Weiner as innovation use case</li>
+                            <li>Explore Salesforce direct integration feasibility</li>
+                        </ul>
+                        <span class="status-badge status-yellow" style="margin-top: 1rem;">Planned</span>
+                    </div>
+                    <div class="card" style="border-left-color: #007bff;">
+                        <h4>🏃 Phase 3: Run (Months 5–12+)</h4>
+                        <p><strong>Objective:</strong> Full-scale deployment as the enterprise sales intelligence platform.</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                            <li>BSE/SOW generation pulled in with appropriate practice owners</li>
+                            <li>Delivery expansion — SOW tied to covering delivery workflows</li>
+                            <li>Full portfolio of practices: Analytics, App Mod, Cloud, AI</li>
+                            <li>300–500 user rollout across GTM organization</li>
+                            <li>Advanced features: opportunity detection, engagement scoring, relationship mapping</li>
+                            <li>Email/calendar integration</li>
+                        </ul>
+                        <span class="status-badge status-blue" style="margin-top: 1rem;">Future</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SAF Pyramid & Priorities -->
+            <section id="safframework" class="section">
+                <h2>SAF Pyramid & Priorities</h2>
+                <p>The Strategic Account Framework is built on a maturity pyramid that defines how Pellera moves customers from transactional hardware buyers to strategic partners — a deliberate progression from reactive selling to proactive value creation.</p>
+
+                <h3>The SAF Pyramid</h3>
+                <div style="background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: 1.5rem 0;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                        <div style="background: linear-gradient(135deg, #6c3483, #8e44ad); color: #fff; padding: 1rem 2rem; border-radius: 8px; width: 40%; text-align: center; font-weight: 600;">Platform Enablement</div>
+                        <div style="background: linear-gradient(135deg, #2874a6, #3498db); color: #fff; padding: 1rem 2rem; border-radius: 8px; width: 50%; text-align: center; font-weight: 600;">Transformational</div>
+                        <div style="background: linear-gradient(135deg, #1e8449, #27ae60); color: #fff; padding: 1rem 2rem; border-radius: 8px; width: 60%; text-align: center; font-weight: 600;">Operational Excellence</div>
+                        <div style="background: linear-gradient(135deg, #d4ac0d, #f1c40f); color: #333; padding: 1rem 2rem; border-radius: 8px; width: 70%; text-align: center; font-weight: 600;">Managed Services / Security</div>
+                        <div style="background: linear-gradient(135deg, #e67e22, #f39c12); color: #fff; padding: 1rem 2rem; border-radius: 8px; width: 80%; text-align: center; font-weight: 600;">Strategic Solutions</div>
+                        <div style="background: linear-gradient(135deg, #cb4335, #e74c3c); color: #fff; padding: 1rem 2rem; border-radius: 8px; width: 90%; text-align: center; font-weight: 600;">Foundational</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding: 0 1rem;">
+                        <div style="text-align: center; font-size: 0.85rem; color: #666;">
+                            <strong style="color: #1a1a2e;">Propose</strong><br>Surface opportunities
+                        </div>
+                        <div style="text-align: center; font-size: 1.2rem; color: #e94560;">→</div>
+                        <div style="text-align: center; font-size: 0.85rem; color: #666;">
+                            <strong style="color: #1a1a2e;">Close</strong><br>Accelerate deliverables
+                        </div>
+                        <div style="text-align: center; font-size: 1.2rem; color: #e94560;">→</div>
+                        <div style="text-align: center; font-size: 0.85rem; color: #666;">
+                            <strong style="color: #1a1a2e;">Grow</strong><br>Expand within accounts
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Business & Technology Priorities</h3>
+                <p>KIRT uses these as the scoring lens when surfacing recommendations, qualifying opportunities, and assessing customer maturity.</p>
+                <div class="grid grid-2">
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>Business Priorities</h4>
+                        <p>The outcomes KIRT helps customers achieve:</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;">
+                            <span class="status-badge status-green">Agility</span>
+                            <span class="status-badge status-green">Productivity</span>
+                            <span class="status-badge status-green">Profitability</span>
+                            <span class="status-badge status-green">Value</span>
+                            <span class="status-badge status-green">Resilience</span>
+                        </div>
+                    </div>
+                    <div class="card" style="border-left-color: #007bff;">
+                        <h4>Technology Priorities</h4>
+                        <p>The lens KIRT uses for technical recommendations:</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;">
+                            <span class="status-badge status-blue">Secure</span>
+                            <span class="status-badge status-blue">Simplify</span>
+                            <span class="status-badge status-blue">Modernize</span>
+                            <span class="status-badge status-blue">Innovate</span>
+                            <span class="status-badge status-blue">Improve</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Solution Domains</h3>
+                <p>The capabilities KIRT maps against customer needs — solution domains Pellera can deliver with consistency, quality, and differentiated value.</p>
+                <div class="grid grid-3">
+                    <div class="card" style="border-left-color: #17a2b8;">
+                        <h4>Cloud Engineering</h4>
+                        <p>Cloud architecture, migration, optimization</p>
+                    </div>
+                    <div class="card" style="border-left-color: #17a2b8;">
+                        <h4>Data & Analytics</h4>
+                        <p>Data platforms, BI, analytics solutions</p>
+                    </div>
+                    <div class="card" style="border-left-color: #17a2b8;">
+                        <h4>AI</h4>
+                        <p>Artificial intelligence, ML, automation</p>
+                    </div>
+                    <div class="card" style="border-left-color: #dc3545;">
+                        <h4>Cyber Security</h4>
+                        <p>Network Security, Endpoint Security, EDR, SOC Services</p>
+                    </div>
+                    <div class="card" style="border-left-color: #6f42c1;">
+                        <h4>Managed Services</h4>
+                        <p>Enterprise Systems, Hybrid Infrastructure, Application Services, Network Services</p>
+                    </div>
+                    <div class="card" style="border-left-color: #dc3545;">
+                        <h4>Managed Security</h4>
+                        <p>Network Sec, Endpoint Sec, EDR, SOC Services</p>
+                    </div>
+                </div>
+
+                <h3>Engagement Rhythm</h3>
+                <p>Three touchpoints where KIRT delivers intelligence throughout the account lifecycle.</p>
+                <div class="grid grid-3">
+                    <div class="card" style="border-left-color: #6f42c1;">
+                        <h4>Tech Summits / Exec Fly-Ins</h4>
+                        <p>Deep strategic sessions with senior customer stakeholders. KIRT provides account briefs, gap analysis, and maturity assessments.</p>
+                    </div>
+                    <div class="card" style="border-left-color: #fd7e14;">
+                        <h4>EBR / Quarterly Client Reviews</h4>
+                        <p>Ongoing relationship management. KIRT surfaces engagement health, cross-sell signals, and progress against customer priorities.</p>
+                    </div>
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>Internal Quarterly Reviews</h4>
+                        <p>Performance review and pipeline planning. KIRT provides aggregated pipeline intelligence, practice-level patterns, and forecast inputs.</p>
+                    </div>
+                </div>
+
+                <div class="card" style="border-left-color: #e94560; margin-top: 1rem;">
+                    <p><strong>Guiding principle:</strong> We don't need everyone to sell the same way. We need everyone aligned to the same growth standard. Joint accountability between sales and technical teams, focused on Enterprise-Signature Accounts (top 20%) where deeper engagement across solution domains yields disproportionate return.</p>
+                </div>
+            </section>
+
+            <!-- System Architecture -->
+            <section id="architecture" class="section">
+                <h2>System Architecture</h2>
+                <p>KIRT operates as a two-product model with bidirectional data flow. Foundation handles structured data ingestion and storage, while KIRT provides user-facing intelligence and automation.</p>
+
+                <div class="diagram">
+                    <div class="diagram-layer">
+                        <div class="layer-label">Foundation Layer (Data Platform — Ingest, Parse, Embed, Store, Serve)</div>
+                        <div class="arch-box foundation">🔗 Connectors (OneDrive, SharePoint, File Drop)</div>
+                        <div class="arch-box foundation">📄 Parsers (Docling + LlamaIndex — 9 formats)</div>
+                        <div class="arch-box foundation">🏔️ Lakehouse (Iceberg / Parquet / Azure Blob)</div>
+                        <div class="arch-box foundation">🐍 Django REST Framework + Celery Pipeline</div>
+                        <div class="arch-box foundation">📡 5 Stable API Endpoints</div>
+                    </div>
+
+                    <div style="text-align: center; font-weight: bold; font-size: 1rem; padding: 0.5rem 0;">
+                        <span style="color: #17a2b8;">🧠 Weaviate (Shared) &nbsp;|&nbsp; 🐘 PostgreSQL &nbsp;|&nbsp; 🔴 Redis</span>
+                    </div>
+
+                    <div style="text-align: center; color: #e94560; font-weight: bold; font-size: 1.5rem;">⇄ Bidirectional Data Flow ⇄</div>
+
+                    <div class="diagram-layer">
+                        <div class="layer-label">KIRT Layer (Intelligence — Classification, Scoring, Deliverables, User-Facing)</div>
+                        <div class="arch-box intel">⚛️ React + Vite + Tailwind + shadcn</div>
+                        <div class="arch-box intel">🧠 Semantic Search & RAG (via Weaviate)</div>
+                        <div class="arch-box intel">✍️ User Content Capture</div>
+                        <div class="arch-box intel">📋 Template Routing & Scoring</div>
+                        <div class="arch-box intel">📝 Deliverable Generation</div>
+                        <div class="arch-box intel">🔧 MCP Tools</div>
+                    </div>
+                </div>
+
+                <h3>Data Ingestion Model</h3>
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>Foundation Front Door</h4>
+                        <p><strong>Systems of Record Ingestion</strong></p>
+                        <p>Systematic, batch-oriented ingestion from enterprise systems of record:</p>
+                        <ul style="margin-top: 1rem; margin-left: 1.5rem; color: #555; line-height: 1.8;">
+                            <li>SharePoint document libraries</li>
+                            <li>Salesforce report exports</li>
+                            <li>CRM and other systems of record</li>
+                            <li>File drops (CSV, structured data)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>KIRT Front Door</h4>
+                        <p><strong>User-Generated & Conversational Data</strong></p>
+                        <p>Real-time, user-initiated data capture, enrichment, and personal content:</p>
+                        <ul style="margin-top: 1rem; margin-left: 1.5rem; color: #555; line-height: 1.8;">
+                            <li>OneDrive (opt-in, personal work product)</li>
+                            <li>Meeting transcripts and notes</li>
+                            <li>Natural language search queries</li>
+                            <li>Account context capture and enrichment</li>
+                            <li>Template-based submissions</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Flow -->
+            <section id="dataflow" class="section">
+                <h2>Data Flow Pipeline</h2>
+                <p>KIRT processes account information through a six-stage opportunity lifecycle, enabling detection, enrichment, qualification, routing, action, and tracking.</p>
+
+                <div class="pipeline">
+                    <div class="pipeline-stage" style="border-top-color: #28a745;">
+                        <h4>1. Detect</h4>
+                        <p>Signal surfaces</p>
+                        <span class="status-badge status-green">Green</span>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" style="border-top-color: #007bff;">
+                        <h4>2. Enrich</h4>
+                        <p>Add context</p>
+                        <span class="status-badge status-blue">Blue</span>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" style="border-top-color: #6f42c1;">
+                        <h4>3. Qualify</h4>
+                        <p>Score it</p>
+                        <span class="status-badge status-purple">Purple</span>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" style="border-top-color: #fd7e14;">
+                        <h4>4. Route</h4>
+                        <p>Right person, right format</p>
+                        <span class="status-badge status-orange">Orange</span>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" style="border-top-color: #dc3545;">
+                        <h4>5. Act</h4>
+                        <p>Concrete next step</p>
+                        <span class="status-badge status-red">Red</span>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" style="border-top-color: #20c997;">
+                        <h4>6. Track</h4>
+                        <p>Outcomes feed back</p>
+                        <span class="status-badge status-teal">Teal</span>
+                    </div>
+                </div>
+
+                <h3>Pipeline Details</h3>
+                <p>Each stage in the pipeline is designed to add value and increase confidence in the opportunity intelligence being generated.</p>
+            </section>
+
+            <!-- Data Sources -->
+            <section id="datasources" class="section">
+                <h2>Data Sources</h2>
+                <p>Data ingestion is phased based on technical readiness, security approval, and integration complexity.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Data Source</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="status-badge status-green">Phase 1</span></td>
+                            <td>SharePoint</td>
+                            <td><span class="status-badge status-green">Confirmed</span></td>
+                            <td>Primary structured data source, direct integration planned</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-green">Phase 1</span></td>
+                            <td>OneDrive (opt-in)</td>
+                            <td><span class="status-badge status-green">Confirmed</span></td>
+                            <td>User-controlled, requires individual permission</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-green">Phase 1</span></td>
+                            <td>Salesforce (report exports)</td>
+                            <td><span class="status-badge status-green">Confirmed</span></td>
+                            <td>Manual export workflow, no direct API</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-green">Phase 1</span></td>
+                            <td>Meeting transcripts</td>
+                            <td><span class="status-badge status-green">Confirmed</span></td>
+                            <td>AI transcription and ingestion pipeline</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-green">Phase 1</span></td>
+                            <td>CRM notes</td>
+                            <td><span class="status-badge status-green">Confirmed</span></td>
+                            <td>Structured note extraction</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-yellow">Phase 2+</span></td>
+                            <td>Email & Calendar</td>
+                            <td><span class="status-badge status-yellow">Pending</span></td>
+                            <td>Requires security/compliance review</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-yellow">Phase 2+</span></td>
+                            <td>Industry & news feeds</td>
+                            <td><span class="status-badge status-yellow">Pending</span></td>
+                            <td>External data partnerships to evaluate</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-yellow">Phase 2+</span></td>
+                            <td>External APIs</td>
+                            <td><span class="status-badge status-yellow">Pending</span></td>
+                            <td>Vendor evaluation and integration</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-red">Blocked</span></td>
+                            <td>Salesforce direct API</td>
+                            <td><span class="status-badge status-red">No Phase 1</span></td>
+                            <td>Data normalization blockers; report export substitute</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-red">Blocked</span></td>
+                            <td>Full OneDrive scanning</td>
+                            <td><span class="status-badge status-red">No Phase 1</span></td>
+                            <td>Privacy and performance concerns; opt-in model only</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Technical Stack -->
+            <section id="techstack" class="section">
+                <h2>Technical Stack</h2>
+                <p>Foundation is the data platform — it ingests, parses, embeds, stores, and serves. No business logic, no user surface. KIRT is the intelligence layer — classification, scoring, template routing, deliverable generation, and everything user-facing. Both share common infrastructure.</p>
+
+                <h3>Shared Infrastructure</h3>
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>☁️ Cloud Platform</h4>
+                        <p><strong>Azure</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Enterprise standard, integrated with existing infrastructure</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🔐 Authentication</h4>
+                        <p><strong>Azure AD / SSO via Graph API</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Foundation owns user/tenant identity; KIRT delegates auth</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🧠 Weaviate</h4>
+                        <p><strong>Hybrid Vector + Keyword Search</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Foundation writes embedded chunks; KIRT queries for semantic search, RAG, and classification. Native multi-tenancy (HNSW index).</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🐘 PostgreSQL</h4>
+                        <p><strong>Metadata & Catalog Store</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Django metadata, Polaris catalog, user/tenant management</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🔴 Redis</h4>
+                        <p><strong>Broker, Cache, Pub-Sub</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Celery message broker, application cache, event pub-sub notifications</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🏗️ Architecture</h4>
+                        <p><strong>Monolith, MCP-native</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Single deployable, native MCP tool integration</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>🛡️ Guardrails</h4>
+                        <p><strong>Human-in-the-loop</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">AI assists, humans decide; critical decisions reviewed</p>
+                    </div>
+                </div>
+
+                <h3>Foundation — Data Layer</h3>
+                <p style="color: #666; margin-bottom: 1rem;">Data platform, not application. Ingests from OneDrive, SharePoint, file drops, and Forge app outputs. Parses, embeds, stores raw source as canonical record, and serves all consumers via 5 stable API endpoints. No business logic — consuming apps own all workflow and decision logic.</p>
+                <div class="grid grid-2">
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>🏔️ Lakehouse</h4>
+                        <p><strong>Apache Iceberg on Parquet / Azure Blob</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Source of truth. Raw content preserved — chunks are derived views, never canonical. Apache Polaris catalog (REST, Postgres-backed). DuckDB query engine for transforms.</p>
+                    </div>
+
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>🐍 Backend & Pipeline</h4>
+                        <p><strong>Django REST Framework + Celery</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">DRF ViewSets for 5 stable API endpoints (ingest, query, retrieve, list, delete). Celery task chains for async ingestion pipeline (4 worker queues). Django admin for operational monitoring. Tenant-scoped from day one.</p>
+                    </div>
+
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>📄 Parsing & Embedding</h4>
+                        <p><strong>Docling + LlamaIndex + Production Embeddings</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Docling for complex layouts (PDF, PPTX — table extraction, reading order). LlamaIndex loaders for 7 additional formats. OpenAI or Cohere embeddings (swappable provider). Content-type routing to chunk strategy (semantic, slide, transcript, structured).</p>
+                    </div>
+
+                    <div class="card" style="border-left-color: #28a745;">
+                        <h4>🔗 Connectors</h4>
+                        <p><strong>Microsoft Graph API + File Drop</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">OneDrive + SharePoint delta sync via MSAL + httpx. File Drop for CSV exports and uploaded documents. 9 file formats supported. Entity extraction from folder paths and SP metadata.</p>
+                    </div>
+                </div>
+
+                <h3>KIRT — Intelligence Layer</h3>
+                <p style="color: #666; margin-bottom: 1rem;">Where the business intelligence happens. All classification, scoring, template routing, deliverable generation, and user-facing features. Queries Foundation's data via API and Weaviate.</p>
+                <div class="grid grid-2">
+                    <div class="card" style="border-left-color: #e94560;">
+                        <h4>⚛️ Frontend</h4>
+                        <p><strong>React + Vite + Tailwind + shadcn</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Modern, component-driven UI with rapid development workflow</p>
+                    </div>
+
+                    <div class="card" style="border-left-color: #e94560;">
+                        <h4>🧠 Semantic Search & RAG</h4>
+                        <p><strong>Weaviate (via Foundation)</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Queries Foundation's vector store for semantic search, RAG, classification, and recommendation. Model-agnostic.</p>
+                    </div>
+
+                    <div class="card" style="border-left-color: #e94560;">
+                        <h4>🐍 Backend</h4>
+                        <p><strong>Django (API Layer, MCP-native)</strong></p>
+                        <span class="status-badge status-green">Confirmed</span>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Business logic, MCP tools, template routing, deliverable generation</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Personas & Workflows -->
+            <section id="personas" class="section">
+                <h2>Personas & Workflows</h2>
+                <p>KIRT is designed for five distinct buyer personas, each with unique intelligence needs and workflows.</p>
+
+                <div class="grid grid-2">
+                    <div class="card expandable collapsed">
+                        <div class="card-header">
+                            <h4>🏛️ Architect / EA</h4>
+                            <span class="expand-icon">›</span>
+                        </div>
+                        <div class="card-content">
+                            <p style="margin-top: 1rem;"><strong>Primary Need:</strong> Rapid context ramp for strategic planning</p>
+                            <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                                <li>Context ramp in minutes</li>
+                                <li>Gap analysis (current vs. target state)</li>
+                                <li>Pre-engagement prep and competitive context</li>
+                                <li>Initiative alignment mapping</li>
+                            </ul>
+                            <span class="status-badge status-blue" style="margin-top: 1rem; display: inline-block;">Account Planning</span>
+                        </div>
+                    </div>
+
+                    <div class="card expandable collapsed">
+                        <div class="card-header">
+                            <h4>💡 Solution Specialist</h4>
+                            <span class="expand-icon">›</span>
+                        </div>
+                        <div class="card-content">
+                            <p style="margin-top: 1rem;"><strong>Primary Need:</strong> Pre-meeting intelligence and positioning</p>
+                            <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                                <li>Quick context lookup</li>
+                                <li>Competitive positioning guidance</li>
+                                <li>Battlecards and objection handling</li>
+                                <li>Recent account activity summary</li>
+                            </ul>
+                            <span class="status-badge status-green" style="margin-top: 1rem; display: inline-block;">Sales Enablement</span>
+                        </div>
+                    </div>
+
+                    <div class="card expandable collapsed">
+                        <div class="card-header">
+                            <h4>📞 Account Executive</h4>
+                            <span class="expand-icon">›</span>
+                        </div>
+                        <div class="card-content">
+                            <p style="margin-top: 1rem;"><strong>Primary Need:</strong> Pipeline signals and opportunities</p>
+                            <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                                <li>Pipeline opportunity alerts</li>
+                                <li>Cross-sell and expansion identification</li>
+                                <li>Weekly activity digest</li>
+                                <li>Win/loss intelligence</li>
+                            </ul>
+                            <span class="status-badge status-green" style="margin-top: 1rem; display: inline-block;">Revenue Growth</span>
+                        </div>
+                    </div>
+
+                    <div class="card expandable collapsed">
+                        <div class="card-header">
+                            <h4>👥 Sales Leadership</h4>
+                            <span class="expand-icon">›</span>
+                        </div>
+                        <div class="card-content">
+                            <p style="margin-top: 1rem;"><strong>Primary Need:</strong> Pipeline health and team performance</p>
+                            <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                                <li>QBR reports and pipeline analytics</li>
+                                <li>Pipeline health dashboard</li>
+                                <li>Cross-team pattern analysis</li>
+                                <li>Competitive win/loss trends</li>
+                            </ul>
+                            <span class="status-badge status-blue" style="margin-top: 1rem; display: inline-block;">Management</span>
+                        </div>
+                    </div>
+
+                    <div class="card expandable collapsed">
+                        <div class="card-header">
+                            <h4>🚀 Delivery / PM</h4>
+                            <span class="expand-icon">›</span>
+                        </div>
+                        <div class="card-content">
+                            <p style="margin-top: 1rem;"><strong>Primary Need:</strong> Customer context and engagement success</p>
+                            <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                                <li>Kickoff brief and discovery summary</li>
+                                <li>Knowledge capture and handoff</li>
+                                <li>Engagement transition documentation</li>
+                                <li>Customer success tracking</li>
+                            </ul>
+                            <span class="status-badge status-blue" style="margin-top: 1rem; display: inline-block;">Customer Success</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deliverables -->
+            <section id="deliverables" class="section">
+                <h2>Outputs & Deliverables</h2>
+                <p>KIRT produces a suite of intelligence deliverables tailored to different roles, contexts, and decision points.</p>
+
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h4>📄 Account Brief</h4>
+                        <p>1-2 page executive summary of account context, initiatives, and strategic priorities</p>
+                        <span class="status-badge status-green">Phase 1</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>📋 Engagement Prep</h4>
+                        <p>Pre-meeting package with competitive positioning, recent activity, and talking points</p>
+                        <span class="status-badge status-green">Phase 1</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>📑 BSE / SOW</h4>
+                        <p>Automated drafting of Budgetary Services Estimates and Statement of Work templates. Out of scope for Phase 1 — pulled in later with appropriate practice owners.</p>
+                        <span class="status-badge status-yellow">Phase 2+</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>🚨 Opportunity Alert</h4>
+                        <p>Proactive notification of cross-sell, expansion, or risk signals in account</p>
+                        <span class="status-badge status-yellow">Phase 2</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>📊 Pipeline Intelligence</h4>
+                        <p>Dashboard view of account pipeline, health, and forecast with predictive scoring</p>
+                        <span class="status-badge status-yellow">Phase 2</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>⚔️ Competitive Intel</h4>
+                        <p>Battlecard with competitor positioning, win/loss analysis, and objection responses</p>
+                        <span class="status-badge status-blue">Phase 1</span>
+                    </div>
+
+                    <div class="card">
+                        <h4>💾 Knowledge Export</h4>
+                        <p>Structured data export for integration with external tools and systems</p>
+                        <span class="status-badge status-blue">Phase 1</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MVP Scope -->
+            <section id="mvpscope" class="section">
+                <h2>MVP Scope</h2>
+                <p>Phase 1 represents the minimum viable product that delivers immediate value. Phase 2+ capabilities are deferred for post-board validation.</p>
+
+                <h3>Phase 1 User Progression</h3>
+                <div class="card" style="border-left-color: #28a745;">
+                    <ol style="margin: 0 0 0 1.5rem; color: #555; line-height: 1.8;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Enterprise Architects (EAs)</strong> — First users, steering committee of ~20</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Solution Specialists (SSs) and Account Executives (AEs) + Sales Managers</strong> — Expanded user base with Sales/GTM focus</li>
+                        <li><strong>BSE generation and Delivery expansion</strong> — Pulled in later with appropriate owners/users tied to those outcomes</li>
+                    </ol>
+                </div>
+
+                <div class="two-column">
+                    <div class="column-title">Phase 1 Scope (In MVP)</div>
+                    <div class="column-title" style="grid-column: 2;">Phase 2+ (Deferred)</div>
+
+                    <div class="column">
+                        <h4>🟢 Capabilities</h4>
+                        <ul>
+                            <li>Natural language search across account data</li>
+                            <li>Auto-classification of documents and content</li>
+                            <li>Account brief generation (AI-assisted)</li>
+                            <li>Meeting transcript analysis and summarization</li>
+                            <li>200-question discovery rubric automation</li>
+                            <li>Cross-sell recommendation engine</li>
+                            <li>Competitive battlecard generation</li>
+                            <li>Document parsing and embedding</li>
+                        </ul>
+                    </div>
+
+                    <div class="column">
+                        <h4>🟡 Deferred Capabilities</h4>
+                        <ul>
+                            <li>Autonomous opportunity detection</li>
+                            <li>Cross-account pattern recognition</li>
+                            <li>Competitive tracking and alerts</li>
+                            <li>Engagement scoring and health prediction</li>
+                            <li>Relationship mapping and influence analysis</li>
+                            <li>Email integration and thread analysis</li>
+                            <li>Calendar-based meeting prep</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>MVP Success Metrics</h3>
+                <div class="card">
+                    <p>Phase 1 MVP will be validated with:</p>
+                    <ul style="margin: 1rem 0 0 1.5rem; color: #555; line-height: 1.8;">
+                        <li>Time-to-brief measurement (target: &lt;10 min from query)</li>
+                        <li>User engagement in pilot program (target: 80%+ adoption in pilot)</li>
+                        <li>Brief quality feedback (target: 4.0+ / 5.0 rating)</li>
+                        <li>Classification accuracy (target: 95%+ on validation set)</li>
+                        <li>Cost savings validation</li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <!-- Adoption Strategy -->
+            <section id="adoption" class="section">
+                <h2>Adoption Strategy</h2>
+                <p>Success requires more than a well-built system—it requires users who actively engage with it. KIRT must answer the fundamental question: <strong>What makes people want to use it, and how do we get them to upload their notes, transcripts, and planning documents?</strong></p>
+                
+                <h3>The Value Exchange Framework</h3>
+                <p>Every interaction must provide immediate, visible value. The feedback loop between upload and output must be tight, obvious, and compelling.</p>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>💡 Immediate Value Exchange</h4>
+                        <p>Every upload produces something useful within minutes:</p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Upload meeting notes → get an engagement prep brief</li>
+                            <li>Upload transcript → get cross-sell recommendations</li>
+                            <li>Input company name → get client deliverable documentation</li>
+                        </ul>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.75rem;"><strong>Design principle:</strong> The user's first experience should be "this saved me hours."</p>
+                    </div>
+                    <div class="card">
+                        <h4>⚡ Reduced Effort, Not Added Process</h4>
+                        <p>KIRT replaces manual work, never adds steps. The interaction model is:</p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Account exec walks into meeting, prints client deliverable documentation (not: fill out form)</li>
+                            <li>Upload existing meeting notes (not: retake the meeting)</li>
+                            <li>Automatic transcript capture (not: manually transcribe)</li>
+                        </ul>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.75rem;"><strong>Success metric:</strong> Time-to-usefulness &lt; 2 minutes from first login.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🏆 Social Proof & FOMO</h4>
+                        <p>Early adopters visibly outperform. Competitive pressure drives adoption:</p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>First users generate better deliverables 80%+ faster</li>
+                            <li>Cross-sell recommendations surface deals others miss</li>
+                            <li>Account briefs are richer and more current</li>
+                        </ul>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.75rem;"><strong>Design principle:</strong> Make early wins visible—Slack messages, team calls, leaderboards of usage.</p>
+                    </div>
+                    <div class="card">
+                        <h4>📈 Low Floor, High Ceiling</h4>
+                        <p>Works with minimal input; gets dramatically better with more data:</p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Day 1: "Company name" → reasonable brief</li>
+                            <li>Week 1: Add 2-3 transcripts → personalized recommendations</li>
+                            <li>Month 1: Full integration → predictive alerts, pattern matching</li>
+                        </ul>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.75rem;"><strong>Design principle:</strong> No minimum viable effort—every bit of data helps.</p>
+                    </div>
+                </div>
+                
+                <h3>Familiar Patterns & Mental Models</h3>
+                <p>KIRT leverages interaction models people already know and trust:</p>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4>🔍 Search-Box Simplicity</h4>
+                        <p>Discovery and intelligence access through a single search interface, like Google or Salesforce. No forms, no navigation trees.</p>
+                    </div>
+                    <div class="card">
+                        <h4>📦 Amazon-Style Recommendations</h4>
+                        <p>"Customers like yours also bought..." pattern applied to services. Invisible pattern recognition that feels helpful, not intrusive.</p>
+                    </div>
+                    <div class="card">
+                        <h4>⏱️ One-Click Generation</h4>
+                        <p>No multi-step wizards. Account brief, engagement prep, client deliverable documentation—all available from a single click.</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Feedback Loops</h4>
+                        <p>User feedback improves the system in real-time. Edit a section? System learns your preferences for future generations.</p>
+                    </div>
+                </div>
+                
+                <h3>Network Effects & Compounding Value</h3>
+                <div class="card">
+                    <p>Every upload makes KIRT smarter for that user AND for their teammates:</p>
+                    <ul style="margin-left: 1.5rem; margin-top: 1rem;">
+                        <li><strong>Individual value:</strong> Dwayne uploads a transcript where he suggested a PCI assessment as part of a storage sale → next time Roy preps for a meeting to sell storage in a regulated environment, the system recommends PCI → Roy gets credit for the cross-sell</li>
+                        <li><strong>Team value:</strong> That transcript improves patterns for every rep selling storage solutions in regulated environments → everyone benefits</li>
+                        <li><strong>Organizational value:</strong> Patterns aggregate across regions, practices, and customer types → best practices surface automatically</li>
+                    </ul>
+                    <p style="margin-top: 1rem;"><strong>Success bar:</strong> "So wildly successful that if it disappears one day, everybody's like, 'What happened?'"</p>
+                </div>
+                
+                <h3>Reclaim Time for Revenue-Producing Work</h3>
+                <div class="card" style="border-left: 4px solid #2196F3;">
+                    <p>If the platform saves each GTM team member at least <strong>10 minutes per day</strong> by removing friction from low-value tasks — searching for information, recreating materials, navigating internal systems — the cumulative impact is significant.</p>
+                    <p>This is not about people working less. It is about <strong>redirecting time toward work that actually drives revenue</strong>: advancing deals, engaging customers, building solutions, and closing business.</p>
+                    <table style="margin: 1rem 0;">
+                        <tr><th>Timeframe</th><th>Time Recovered</th></tr>
+                        <tr><td>Per Day</td><td><strong>50 hours</strong></td></tr>
+                        <tr><td>Per Week</td><td><strong>250 hours</strong></td></tr>
+                        <tr><td>Per Year</td><td><strong>13,000 hours</strong></td></tr>
+                    </table>
+                    <p>That equals roughly <strong>six full-time employees</strong> worth of capacity redirected to revenue-producing work.</p>
+                    <p style="margin-top: 0.75rem;">Ten minutes is just the starting point. The real goal is to reduce the 80% of work that creates friction so GTM teams can spend that time on work that actually moves the needle: building relationships, advancing opportunities, and closing business.</p>
+                </div>
+
+                <h3>Adoption Levers: What We'll Measure</h3>
+                <table>
+                    <tr>
+                        <th>Lever</th>
+                        <th>Metric</th>
+                        <th>Target (Month 1)</th>
+                    </tr>
+                    <tr>
+                        <td>First-use value perception</td>
+                        <td>% users generate 1st output within 24 hours</td>
+                        <td>75%+</td>
+                    </tr>
+                    <tr>
+                        <td>Effort reduction</td>
+                        <td>Avg time saved per brief/deliverable (self-reported)</td>
+                        <td>2-3 hours</td>
+                    </tr>
+                    <tr>
+                        <td>Upload engagement</td>
+                        <td>Avg uploads per user per week</td>
+                        <td>3+ (transcripts, notes, docs)</td>
+                    </tr>
+                    <tr>
+                        <td>Return visits</td>
+                        <td>% users who return within 7 days</td>
+                        <td>80%+</td>
+                    </tr>
+                    <tr>
+                        <td>Competitive intensity</td>
+                        <td>Cross-sell recommendations accepted</td>
+                        <td>20%+ of suggestions converted</td>
+                    </tr>
+                    <tr>
+                        <td>Network effects</td>
+                        <td>% recommendations derived from peer uploads</td>
+                        <td>40%+</td>
+                    </tr>
+                </table>
+                
+                <h3>Rollout Phasing</h3>
+                <p>Adoption happens in waves, each designed to build momentum:</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Phase 1: Steering Committee (20 people)</h4>
+                            <p>Deep integration with EA (enterprise architecture) team. Tight feedback loops. Daily usage expected. Build case studies and wins for peer reference.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Phase 2: Extended Leadership (80-120 people)</h4>
+                            <p>Sales leaders, practice leads, regional VPs see steering committee results. Internal marketing showcases early wins. "Lighthouse customer" proof points from their peers.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Phase 3: Broad Rollout (300-500 people)</h4>
+                            <p>General availability to all account executives, architects, pre-sales. Word-of-mouth from high-performing peers. Social proof is the adoption driver.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Timeline -->
+            <section id="timeline" class="section">
+                <h2>Crawl-Walk-Run Timeline</h2>
+                <p>Phased rollout designed to prove value early, expand deliberately, and scale with confidence.</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>✅ Week 0: Mar 11</h4>
+                            <p><strong>Strategy Session & Kickoff</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Team alignment, mandate confirmed, architecture review</p>
+                            <span class="status-badge status-green" style="margin-top: 0.5rem;">Crawl</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Weeks 1–2: Mar 18</h4>
+                            <p><strong>Definition & Prototyping</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Definition doc finalized, sample deliverables collected from PTAs, unified questionnaire template, SharePoint site + Teams channel, V1 prototype with synthetic data</p>
+                            <span class="status-badge status-green" style="margin-top: 0.5rem;">Crawl</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Weeks 3–4: Apr 1</h4>
+                            <p><strong>Core MVP Build & Security Review</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Foundation pipeline (ingest → parse → embed → store), KIRT API development, classification model, brief generation, security review with Sean Colicchio</p>
+                            <span class="status-badge status-green" style="margin-top: 0.5rem;">Crawl</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Weeks 5–6: Apr 15</h4>
+                            <p><strong>EA Steering Committee Pilot</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Working MVP with 5–10 real accounts, tight feedback loops with ~20 EA users, iterate on output format and questionnaire, stakeholder checkpoint</p>
+                            <span class="status-badge status-green" style="margin-top: 0.5rem;">Crawl → Walk</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Months 2–3: May–Jun</h4>
+                            <p><strong>Expand User Base & Data Integration</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Expand from EAs to Solution Specialists, AEs, and Sales Managers. Stakeholder progress update (~8 weeks). Explore Salesforce direct integration feasibility. Present to Adam Weiner as innovation use case.</p>
+                            <span class="status-badge status-yellow" style="margin-top: 0.5rem;">Walk</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Month 4: Jul</h4>
+                            <p><strong>Platform Maturation</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">Advanced features: opportunity detection, engagement scoring. UI refinement based on user feedback. 80–120 active users across extended leadership.</p>
+                            <span class="status-badge status-yellow" style="margin-top: 0.5rem;">Walk</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h4>Months 5–12+</h4>
+                            <p><strong>Full-Scale Deployment</strong></p>
+                            <p style="margin-top: 0.75rem; font-size: 0.95rem; color: #777;">BSE/SOW generation with practice owners. Delivery expansion. Full portfolio of practices (Analytics, App Mod, Cloud, AI). 300–500 user rollout across GTM organization. Email/calendar integration.</p>
+                            <span class="status-badge status-blue" style="margin-top: 0.5rem;">Run</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risks & Gaps -->
+            <section id="risks" class="section">
+                <h2>Risks & Gaps</h2>
+                <p>Key risks and known gaps that could impact timeline, scope, or success criteria.</p>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h4><span class="severity severity-high">HIGH</span> Data Normalization Crisis</h4>
+                        <p><strong>Problem:</strong> Customer records are duplicated and inconsistent across SharePoint, Salesforce, and CRM systems</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Blocks Salesforce API integration, makes report exports unreliable, degrades brief quality</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Phase 1 uses manual export + data cleansing scripts; consider master data governance post-MVP</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-high">HIGH</span> No Cost Model</h4>
+                        <p><strong>Problem:</strong> Board will expect specific financial ROI and cost justification</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Cannot defend 50-70% reduction in effort claim without backing math</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Build cost model in parallel; interview 5-10 sales leaders on time/cost savings opportunity</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-high">HIGH</span> Open Question: Cost of Sale Definition</h4>
+                        <p><strong>Question:</strong> What's included in "cost of sale"? How is it measured? How does it factor in AEs, Solution Specialists, and Practice Support for GTM from non-billable resources?</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Cannot accurately calculate ROI without clarity on cost inputs and allocation methodology</p>
+                        <p style="margin-top: 0.75rem;"><strong>Next Step:</strong> Clarify with finance and sales leadership during cost model development</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-medium">MEDIUM</span> Legal/IT Approval Path</h4>
+                        <p><strong>Problem:</strong> Data ingestion, AI use, and vendor integration require compliance reviews</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Could delay Phase 1 or require architectural changes</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Engage legal/IT immediately; use pre-approved Azure services</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-medium">MEDIUM</span> No Intermediate KPIs</h4>
+                        <p><strong>Problem:</strong> Difficult to measure progress between now and the Rusk pitch meetings</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Meetings lack objective success criteria and demonstrated wins</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Define sprint-level metrics; weekly dashboard of build progress</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-medium">MEDIUM</span> Synthetic Data Strategy</h4>
+                        <p><strong>Problem:</strong> Real customer data is sensitive; synthetic data generation for demos not yet planned</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Cannot demo system safely with real data, or demo will lack realism</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Build synthetic data generator; validate with small real dataset</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-low">LOW</span> Competitive Landscape Not Validated</h4>
+                        <p><strong>Problem:</strong> Market research on competing AI account intelligence tools is incomplete</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Board may compare KIRT to products with different architecture/scope</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Quick competitive scan in Week 1; document differentiation</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><span class="severity severity-low">LOW</span> Product Naming Not Settled</h4>
+                        <p><strong>Problem:</strong> Naming inconsistency: KIRT vs Forge Foundation (legacy naming resolved)</p>
+                        <p style="margin-top: 0.75rem;"><strong>Impact:</strong> Communications confusion, brand dilution</p>
+                        <p style="margin-top: 0.75rem;"><strong>Mitigation:</strong> Decide final name by Week 2; use consistently in all materials</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functionality
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.section');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = item.getAttribute('data-section');
+
+                // Remove active class from all items and sections
+                navItems.forEach(nav => nav.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+
+                // Add active class to clicked item and corresponding section
+                item.classList.add('active');
+                document.getElementById(sectionId).classList.add('active');
+
+                // Scroll to top of content
+                document.querySelector('.content').scrollTo(0, 0);
+            });
+        });
+
+        // Card expansion functionality
+        const expandableCards = document.querySelectorAll('.card.expandable');
+        expandableCards.forEach(card => {
+            const header = card.querySelector('.card-header');
+            header.addEventListener('click', () => {
+                card.classList.toggle('collapsed');
+            });
+        });
+
+        // Smooth scroll for sidebar on mobile
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.addEventListener('scroll', (e) => {
+                    // Sidebar scroll behavior
+                });
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Alt + number to jump to section (1-11)
+            if (e.altKey && e.key >= '1' && e.key <= '9') {
+                const index = parseInt(e.key) - 1;
+                if (navItems[index]) {
+                    navItems[index].click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

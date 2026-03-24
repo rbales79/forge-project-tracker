@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Foundation — Architecture</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --surface: #1a2332;
+    --border: #2d3a4a;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --purple: #bc8cff;
+    --red: #f85149;
+    --cyan: #79c0ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; line-height: 1.5; }
+  h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+  .version-badge { display: inline-block; background: var(--green); color: var(--bg); font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .planned-badge { background: var(--orange); }
+
+  /* Grid layout */
+  .arch-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+  @media (min-width: 768px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--accent); }
+  .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+  .card h2 .icon { font-size: 1.2rem; }
+  .card.full-width { grid-column: 1 / -1; }
+
+  /* Service list */
+  .svc-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .svc { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.85rem; cursor: default; transition: all 0.2s; }
+  .svc:hover { border-color: var(--accent); background: #1c2d40; }
+  .svc .name { font-weight: 600; }
+  .svc .detail { color: var(--muted); font-size: 0.8rem; display: block; }
+  .svc.container { border-left: 3px solid var(--green); }
+  .svc.host { border-left: 3px solid var(--orange); }
+  .svc.external { border-left: 3px solid var(--purple); }
+
+  /* Flow diagram */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; font-size: 0.85rem; }
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+  .flow-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 1rem; text-align: center; min-width: 120px; }
+  .flow-box.highlight { border-color: var(--accent); color: var(--accent); }
+  .flow-arrow { color: var(--muted); font-size: 1.2rem; line-height: 1; padding: 0.25rem 0; }
+  .flow-arrow.horiz { padding: 0 0.25rem; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .tbl th { text-align: left; color: var(--muted); font-weight: 500; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .method { font-family: monospace; font-weight: 600; font-size: 0.8rem; }
+  .method.post { color: var(--green); }
+  .method.get { color: var(--accent); }
+  .method.delete { color: var(--red); }
+  .endpoint { font-family: monospace; color: var(--cyan); font-size: 0.8rem; }
+
+  /* Legend */
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+  .legend-dot { width: 12px; height: 3px; border-radius: 2px; }
+  .legend-dot.green { background: var(--green); }
+  .legend-dot.orange { background: var(--orange); }
+  .legend-dot.purple { background: var(--purple); }
+
+  /* Network */
+  .net-layer { border-left: 3px solid var(--border); padding-left: 1rem; margin-bottom: 1rem; }
+  .net-layer:last-child { margin-bottom: 0; }
+  .net-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .net-detail { color: var(--muted); font-size: 0.85rem; }
+
+  /* Roadmap */
+  .roadmap { display: flex; flex-direction: column; gap: 0.75rem; }
+  .milestone { display: flex; align-items: flex-start; gap: 0.75rem; }
+  .milestone-marker { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .milestone-marker.shipped { background: var(--green); }
+  .milestone-marker.planned { background: var(--orange); border: 2px solid var(--orange); background: transparent; }
+  .milestone-title { font-weight: 600; font-size: 0.9rem; }
+  .milestone-desc { color: var(--muted); font-size: 0.85rem; }
+
+  /* Footer */
+  .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); max-width: 1200px; margin-left: auto; margin-right: auto; }
+</style>
+</head>
+<body>
+
+<div style="max-width: 1200px; margin: 0 auto;">
+  <h1>Forge Foundation <span class="version-badge">v3.0</span></h1>
+  <p class="subtitle">Shared data platform for the Forge consulting ecosystem. Ingests, stores, chunks, embeds, and serves — consumer apps own all workflow.</p>
+</div>
+
+<div class="arch-grid">
+
+  <!-- Ingest Flow -->
+  <div class="card full-width">
+    <h2><span class="icon">&#9655;</span> Data Flow</h2>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box">Sources<br><small style="color:var(--muted)">SharePoint, OneDrive, File Drop, Forge Apps</small></div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box">Connectors<br><small style="color:var(--muted)">MSAL + httpx, delta sync</small></div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box highlight">REST API<br><small>POST /v1/ingest/</small></div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box">Dagster Pipeline<br><small style="color:var(--muted)">6-asset ingest chain</small></div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box">Parse<br><small style="color:var(--muted)">Docling / LlamaIndex</small></div>
+        <span class="flow-arrow horiz">&#8594;</span>
+        <div class="flow-box">Store Raw<br><small style="color:var(--muted)">Iceberg (Parquet)</small></div>
+        <span class="flow-arrow horiz">&#8594;</span>
+        <div class="flow-box">Chunk<br><small style="color:var(--muted)">Semantic strategies</small></div>
+        <span class="flow-arrow horiz">&#8594;</span>
+        <div class="flow-box">Embed<br><small style="color:var(--muted)">Ollama nomic-embed</small></div>
+        <span class="flow-arrow horiz">&#8594;</span>
+        <div class="flow-box">Index<br><small style="color:var(--muted)">Weaviate HNSW</small></div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box">Shadow Record<br><small style="color:var(--muted)">PostgreSQL metadata</small></div>
+        <span class="flow-arrow horiz">&#8594;</span>
+        <div class="flow-box">Redis Streams Event<br><small style="color:var(--muted)">document.ingested</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Plane (CVPS2) -->
+  <div class="card">
+    <h2><span class="icon">&#9881;</span> App Plane — CVPS2</h2>
+    <p style="color:var(--muted); font-size:0.85rem; margin-bottom:0.75rem;">8 vCPU / 24 GB / 400 GB / 10.0.0.1</p>
+    <div class="svc-list">
+      <div class="svc host">
+        <span class="name">nginx</span>
+        <span class="detail">Host systemd &bull; :80/443 SSL</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Django API</span>
+        <span class="detail">gunicorn &bull; 3 workers &bull; :8000</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Celery Worker</span>
+        <span class="detail">prefork &bull; 4 procs &bull; 4 queues</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Dagster Webserver</span>
+        <span class="detail">Pipeline UI &bull; :3000 (Tailscale)</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Dagster Daemon</span>
+        <span class="detail">Scheduler + sensor executor</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Polaris Catalog</span>
+        <span class="detail">Iceberg REST &bull; :8181</span>
+      </div>
+    </div>
+    <div class="legend" style="margin-top:0.75rem;">
+      <div class="legend-item"><div class="legend-dot green"></div> Docker container</div>
+      <div class="legend-item"><div class="legend-dot orange"></div> Host process</div>
+    </div>
+  </div>
+
+  <!-- Data Plane (CVPS1) -->
+  <div class="card">
+    <h2><span class="icon">&#128451;</span> Data Plane — CVPS1</h2>
+    <p style="color:var(--muted); font-size:0.85rem; margin-bottom:0.75rem;">8 vCPU / 24 GB / 400 GB / 10.0.0.2 — all ports internal only</p>
+    <div class="svc-list">
+      <div class="svc container">
+        <span class="name">Weaviate</span>
+        <span class="detail">HNSW + hybrid &bull; 12 GB limit &bull; :8080</span>
+      </div>
+      <div class="svc container">
+        <span class="name">PostgreSQL 16</span>
+        <span class="detail">3 DBs: foundation, polaris, dagster &bull; 2 GB &bull; :5432</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Redis 7</span>
+        <span class="detail">Celery broker + Streams events &bull; 512 MB &bull; :6379</span>
+      </div>
+      <div class="svc container">
+        <span class="name">Ollama</span>
+        <span class="detail">nomic-embed-text (768-dim) &bull; 6 GB &bull; :11434</span>
+      </div>
+    </div>
+    <div class="legend" style="margin-top:0.75rem;">
+      <div class="legend-item"><div class="legend-dot green"></div> All containerized</div>
+      <div class="legend-item"><div class="legend-dot purple"></div> Contabo S3 (external)</div>
+    </div>
+  </div>
+
+  <!-- API Endpoints -->
+  <div class="card full-width">
+    <h2><span class="icon">&#128279;</span> API Surface (13 endpoints)</h2>
+    <table class="tbl">
+      <tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/v1/ingest/</td><td>Async file ingestion via Dagster pipeline</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/v1/query/</td><td>Hybrid semantic + keyword search with freshness scoring</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/retrieve/&lt;id&gt;/</td><td>Full document metadata and content</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/list/</td><td>Paginated listing with lifecycle/metadata filters</td></tr>
+      <tr><td><span class="method delete">DELETE</span></td><td class="endpoint">/v1/delete/&lt;id&gt;/</td><td>Soft delete or GDPR hard purge</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/v1/annotations/</td><td>Write classifications, tags, summaries</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/annotations/</td><td>Read annotations for a document</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/jobs/&lt;id&gt;/</td><td>Async job status (Dagster run tracking)</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/connections/</td><td>Connector instance health</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/auth/permissions/</td><td>API key permissions and role</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/health/&lt;svc&gt;/</td><td>Per-service health check</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/v1/health/quality/</td><td>Data quality metrics and drift detection</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/health/</td><td>Quick reachability</td></tr>
+    </table>
+  </div>
+
+  <!-- Network -->
+  <div class="card">
+    <h2><span class="icon">&#127760;</span> Network Layers</h2>
+    <div class="net-layer">
+      <div class="net-label">Cloudflare DNS</div>
+      <div class="net-detail">foundation.roybales.com &rarr; CVPS2 nginx (A record, SSL)</div>
+    </div>
+    <div class="net-layer">
+      <div class="net-label">Contabo Internal (10.0.0.0/22)</div>
+      <div class="net-detail">App plane &harr; Data plane. All cross-service traffic. Not internet-routable.</div>
+    </div>
+    <div class="net-layer">
+      <div class="net-label">Tailscale Mesh VPN (100.x.x.x)</div>
+      <div class="net-detail">Operator access: SSH, Dagster UI (:3000), Django admin (:8000/admin/). MacBook &harr; CVPS1 &harr; CVPS2.</div>
+    </div>
+  </div>
+
+  <!-- Key Concepts -->
+  <div class="card">
+    <h2><span class="icon">&#128273;</span> Key Concepts</h2>
+    <table class="tbl">
+      <tr><td style="font-weight:600;">document_id</td><td>SHA-256 of (tenant + source_path + content). Content-addressable.</td></tr>
+      <tr><td style="font-weight:600;">logical_document_id</td><td>SHA-256 of (tenant + source_path). Groups version chains.</td></tr>
+      <tr><td style="font-weight:600;">lifecycle_state</td><td>active &rarr; deleted_at_source &rarr; purged | superseded</td></tr>
+      <tr><td style="font-weight:600;">embedding_status</td><td>pending &rarr; embedded | failed | stale</td></tr>
+      <tr><td style="font-weight:600;">Collections</td><td>SemanticChunks (text) + SlideChunks (PPTX with slide metadata)</td></tr>
+      <tr><td style="font-weight:600;">Tenant isolation</td><td>Every query scoped by tenant_id. API keys bound to tenants.</td></tr>
+      <tr><td style="font-weight:600;">Version tracking</td><td>parser_version, chunker_version, embedding_model on every chunk</td></tr>
+    </table>
+  </div>
+
+  <!-- Ecosystem -->
+  <div class="card">
+    <h2><span class="icon">&#127793;</span> Forge Ecosystem</h2>
+    <div class="svc-list">
+      <div class="svc" style="border-left:3px solid var(--accent);">
+        <span class="name">Foundation</span>
+        <span class="detail">Data platform (this project)</span>
+      </div>
+      <div class="svc" style="border-left:3px solid var(--cyan);">
+        <span class="name">Intel</span>
+        <span class="detail">Account intelligence, GTM, templates</span>
+      </div>
+      <div class="svc" style="border-left:3px solid var(--cyan);">
+        <span class="name">Recon</span>
+        <span class="detail">Deep research engine</span>
+      </div>
+      <div class="svc" style="border-left:3px solid var(--cyan);">
+        <span class="name">Groundwork</span>
+        <span class="detail">AI app design and ideation</span>
+      </div>
+      <div class="svc" style="border-left:3px solid var(--purple);">
+        <span class="name">MCP Server</span>
+        <span class="detail">AI assistant integration (13 tools)</span>
+      </div>
+    </div>
+    <p style="color:var(--muted); font-size:0.85rem; margin-top:0.75rem;">Consumer apps talk to Foundation via REST API. They never access Weaviate, Iceberg, or PostgreSQL directly.</p>
+  </div>
+
+  <!-- Roadmap -->
+  <div class="card">
+    <h2><span class="icon">&#128506;</span> Roadmap</h2>
+    <div class="roadmap">
+      <div class="milestone">
+        <div class="milestone-marker shipped"></div>
+        <div>
+          <div class="milestone-title">v1.0 — MVP</div>
+          <div class="milestone-desc">Core platform: auth, lakehouse, parsing, embedding, vector search, API, connectors, synthetic data</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-marker shipped"></div>
+        <div>
+          <div class="milestone-title">v2.0 — Hardening</div>
+          <div class="milestone-desc">Tech debt, multi-user RBAC, SharePoint connector hardening, Polaris catalog verification</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-marker shipped"></div>
+        <div>
+          <div class="milestone-title">v3.0 — Consumer App Readiness</div>
+          <div class="milestone-desc">Dagster orchestration, Redis Streams, annotations, job tracking, data quality, version chains, GDPR purge</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-marker planned"></div>
+        <div>
+          <div class="milestone-title">v4.0 — Platform Maturity <span class="version-badge planned-badge">planned</span></div>
+          <div class="milestone-desc">OpenMetadata governance, automated reconciliation, Spark query engine, advanced lineage</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Forge Foundation &mdash; Data platform, not application. No end-user UI, no business logic, no LLM classification.<br>
+  Generated 2026-03-17 &bull; v3.0
+</div>
+
+</body>
+</html>
