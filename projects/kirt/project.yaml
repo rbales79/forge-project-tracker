@@ -1,0 +1,52 @@
+name: "KIRT"
+status: ideation
+active_agent: ideation
+current_phase: "artifacts-complete"
+created: 2026-03-24
+updated: 2026-03-24
+description: "AI-powered intelligence layer for the Strategic Account Framework. Generates Account Briefs, Engagement Prep packages, Meeting Summaries, Client Deliverables, and Cross-Sell Recommendations on top of Forge Foundation v3. Serves Full SAF, On-Demand, and Consumer user modes."
+repo: ""
+tier: 1
+track: gsd
+complexity: complex
+build_engine: gsd-full
+research_depth: medium
+research_mode: intake-synthesis
+tags: [saf, account-intelligence, django, react, weaviate, forge-ecosystem, enterprise, sharepoint, multi-provider-llm, gdpr, msa-compliance]
+relationships:
+  ecosystem: forgecf
+  role: member
+  consumes:
+    - slug: forge-foundation
+      data: "Document canonical records, enrichments, search results, annotations, job status, Redis Streams events via 13 REST API endpoints (v3.0)"
+  produces:
+    - slug: forge-foundation
+      data: "Classifications, scores, tags, stakeholder maps, generation provenance, feedback pairs written back via annotations API. User uploads routed via ingest API."
+  writeback:
+    - target: sharepoint
+      data: "Generated deliverables (Account Briefs, Engagement Prep, Client Deliverables) written to designated SP output folders"
+planning:
+  handoff: .planning/HANDOFF.md
+  phases: 5
+  phase_contexts:
+    - .planning/phase-1-context.md
+    - .planning/phase-2-context.md
+    - .planning/phase-3-context.md
+    - .planning/phase-4-context.md
+    - .planning/phase-5-context.md
+  risks: .planning/risks-and-considerations.md
+  market_research: .planning/research/market-research.md
+key_dependencies:
+  - name: offerings-catalog-v01
+    status: wip
+    owner: jonathan
+    blocking: [white-space-grid, cross-sell, engagement-prep-questions]
+  - name: discovery-question-taxonomy
+    status: needs-formalization
+    blocking: [engagement-prep]
+  - name: demo-data-4-accounts
+    status: wip
+    blocking: [integration-testing, demo]
+  - name: foundation-v3-live
+    status: operational
+    blocking: [integration-testing]
