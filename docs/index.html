@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge SDLC — Project Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #e6edf3;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        /* ── Header ── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(22, 33, 62, 0.98), rgba(15, 52, 96, 0.98));
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #e94560;
+            padding: 1.25rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .header-left h1 {
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-left h1::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #e94560;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #e94560;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-subtitle {
+            color: #a0c4ff;
+            font-size: 0.82rem;
+            margin-top: 0.3rem;
+            font-weight: 300;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-reset {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            background: rgba(248, 81, 73, 0.3);
+            border-color: #f85149;
+        }
+
+        /* ── Board ── */
+        .board {
+            display: flex;
+            gap: 1rem;
+            padding: 1.5rem;
+            min-height: calc(100vh - 120px);
+            align-items: flex-start;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 260px;
+            max-width: 340px;
+            background: rgba(13, 17, 23, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(48, 54, 61, 0.6);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 140px);
+        }
+
+        .column-header {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .column-title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .column-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .column-count {
+            background: rgba(110, 118, 129, 0.2);
+            color: #8b949e;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+        }
+
+        .column-body {
+            padding: 0.5rem;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 80px;
+        }
+
+        .column-body.drag-over {
+            background: rgba(88, 166, 255, 0.06);
+            border-radius: 0 0 12px 12px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: #1a2332;
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            border-radius: 8px;
+            padding: 0.85rem;
+            margin-bottom: 0.5rem;
+            cursor: grab;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: rgba(88, 166, 255, 0.4);
+            box-shadow: 0 0 12px rgba(88, 166, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .card.dragging {
+            opacity: 0.4;
+            transform: rotate(2deg) scale(0.97);
+        }
+
+        .card-drop-indicator {
+            height: 3px;
+            background: #58a6ff;
+            border-radius: 2px;
+            margin-bottom: 0.5rem;
+            animation: indicatorPulse 1s infinite;
+        }
+
+        @keyframes indicatorPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .card-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #e6edf3;
+            cursor: pointer;
+            margin-bottom: 0.35rem;
+            line-height: 1.3;
+        }
+
+        .card-name:hover {
+            color: #58a6ff;
+        }
+
+        .card-description {
+            font-size: 0.75rem;
+            color: #8b949e;
+            line-height: 1.45;
+            margin-bottom: 0.55rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .badge {
+            font-size: 0.62rem;
+            font-weight: 600;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-t1 { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+        .badge-t2 { background: rgba(88, 166, 255, 0.2); color: #58a6ff; }
+        .badge-t3 { background: rgba(139, 148, 158, 0.2); color: #8b949e; }
+
+        .badge-track {
+            background: rgba(188, 140, 255, 0.15);
+            color: #bc8cff;
+        }
+
+        .badge-agent {
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .tag {
+            font-size: 0.6rem;
+            color: #6e7681;
+            background: rgba(110, 118, 129, 0.12);
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: #484f58;
+        }
+
+        .card-footer a {
+            color: #58a6ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .repo-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .repo-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ── Detail Panel ── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 480px;
+            max-width: 90vw;
+            height: 100vh;
+            background: #0d1117;
+            border-left: 1px solid rgba(48, 54, 61, 0.8);
+            z-index: 300;
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .detail-panel.active {
+            right: 0;
+        }
+
+        .detail-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(110, 118, 129, 0.2);
+            border: none;
+            color: #8b949e;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .detail-close:hover {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+
+        .detail-content {
+            padding: 2rem;
+        }
+
+        .detail-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            padding-right: 2.5rem;
+        }
+
+        .detail-status {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .detail-status .column-dot {
+            width: 7px;
+            height: 7px;
+        }
+
+        .detail-section {
+            margin-bottom: 1.4rem;
+        }
+
+        .detail-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6e7681;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-description {
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: #c9d1d9;
+        }
+
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .detail-tag {
+            font-size: 0.72rem;
+            color: #a0c4ff;
+            background: rgba(88, 166, 255, 0.1);
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+        }
+
+        .detail-link {
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .detail-link:hover {
+            text-decoration: underline;
+        }
+
+        .detail-dep {
+            background: rgba(26, 35, 50, 0.8);
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .detail-dep-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .detail-dep-status {
+            font-size: 0.68rem;
+            color: #8b949e;
+            margin-top: 0.15rem;
+        }
+
+        .detail-dep-blocking {
+            font-size: 0.68rem;
+            color: #f85149;
+            margin-top: 0.15rem;
+        }
+
+        .detail-rel {
+            font-size: 0.82rem;
+            color: #c9d1d9;
+            line-height: 1.5;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-rel strong {
+            color: #e6edf3;
+        }
+
+        .detail-artifact {
+            font-size: 0.78rem;
+            color: #8b949e;
+            padding: 0.2rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .detail-arch-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(233, 69, 96, 0.12);
+            color: #e94560;
+            border: 1px solid rgba(233, 69, 96, 0.25);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .detail-arch-link:hover {
+            background: rgba(233, 69, 96, 0.25);
+            border-color: #e94560;
+        }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: #1a2332;
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            min-width: 300px;
+            max-width: 420px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-text {
+            font-size: 0.8rem;
+            color: #c9d1d9;
+            line-height: 1.4;
+        }
+
+        .toast-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .btn-copy-yaml {
+            background: rgba(88, 166, 255, 0.12);
+            color: #58a6ff;
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.68rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-copy-yaml:hover {
+            background: rgba(88, 166, 255, 0.25);
+        }
+
+        .btn-dismiss {
+            background: transparent;
+            color: #6e7681;
+            border: none;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.68rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+
+        .btn-dismiss:hover {
+            color: #8b949e;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            padding: 1rem 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #484f58;
+            border-top: 1px solid rgba(48, 54, 61, 0.3);
+        }
+
+        .footer a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(110, 118, 129, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(110, 118, 129, 0.5);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .board {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+            .column {
+                min-width: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            .header-left h1 {
+                font-size: 1.2rem;
+            }
+            .board {
+                padding: 0.75rem;
+            }
+            .column {
+                min-width: 200px;
+            }
+            .detail-panel {
+                width: 100vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <h1>Forge SDLC — Project Board</h1>
+        <div class="header-subtitle" id="header-meta">Loading projects...</div>
+    </div>
+    <div class="header-actions">
+        <button class="btn-reset" id="btn-reset" title="Clear localStorage overrides and reload from projects.json">Reset overrides</button>
+    </div>
+</header>
+
+<main class="board" id="board"></main>
+
+<div class="overlay" id="overlay"></div>
+<aside class="detail-panel" id="detail-panel">
+    <button class="detail-close" id="detail-close">&times;</button>
+    <div class="detail-content" id="detail-content"></div>
+</aside>
+
+<div class="toast-container" id="toast-container"></div>
+
+<footer class="footer">
+    <a href="projects/kirt/architecture.html">Architecture: KIRT</a>
+</footer>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ── Constants ── */
+    var STATUSES = ['concept', 'ideation', 'building', 'quality', 'deploying', 'shipped'];
+    var STATUS_COLORS = {
+        concept:   '#8b949e',
+        ideation:  '#d29922',
+        building:  '#58a6ff',
+        quality:   '#bc8cff',
+        deploying: '#f85149',
+        shipped:   '#3fb950'
+    };
+    var TIER_CLASSES = { 1: 'badge-t1', 2: 'badge-t2', 3: 'badge-t3' };
+    var LS_KEY = 'forge-board-overrides';
+    var MAX_TAGS = 4;
+
+    /* ── State ── */
+    var projects = [];
+    var overrides = {};
+    var dragSlug = null;
+
+    /* ── Helpers ── */
+    function loadOverrides() {
+        try {
+            var raw = localStorage.getItem(LS_KEY);
+            return raw ? JSON.parse(raw) : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function saveOverrides(o) {
+        localStorage.setItem(LS_KEY, JSON.stringify(o));
+    }
+
+    function effectiveStatus(proj) {
+        return overrides[proj.slug] || proj.status;
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function formatDate(d) {
+        if (!d) return '';
+        var parts = d.split('-');
+        if (parts.length === 3) return parts[1] + '/' + parts[2];
+        return d;
+    }
+
+    /* ── Render ── */
+    function render() {
+        var board = document.getElementById('board');
+        board.innerHTML = '';
+
+        var buckets = {};
+        STATUSES.forEach(function (s) { buckets[s] = []; });
+        projects.forEach(function (p) {
+            var s = effectiveStatus(p);
+            if (buckets[s]) buckets[s].push(p);
+        });
+
+        STATUSES.forEach(function (status) {
+            var col = document.createElement('div');
+            col.className = 'column';
+            col.dataset.status = status;
+
+            var header = document.createElement('div');
+            header.className = 'column-header';
+            header.innerHTML =
+                '<span class="column-title">' +
+                    '<span class="column-dot" style="background:' + STATUS_COLORS[status] + ';box-shadow:0 0 6px ' + STATUS_COLORS[status] + '"></span>' +
+                    escapeHtml(status) +
+                '</span>' +
+                '<span class="column-count">' + buckets[status].length + '</span>';
+            col.appendChild(header);
+
+            var body = document.createElement('div');
+            body.className = 'column-body';
+            body.dataset.status = status;
+
+            body.addEventListener('dragover', handleDragOver);
+            body.addEventListener('dragleave', handleDragLeave);
+            body.addEventListener('drop', handleDrop);
+
+            buckets[status].forEach(function (p) {
+                body.appendChild(buildCard(p));
+            });
+
+            col.appendChild(body);
+            board.appendChild(col);
+        });
+
+        /* Update header meta */
+        var total = projects.length;
+        var now = new Date();
+        var ts = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                 ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('header-meta').textContent =
+            total + ' projects \u00B7 generated ' + ts;
+    }
+
+    function buildCard(proj) {
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = true;
+        card.dataset.slug = proj.slug;
+
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+
+        /* Name */
+        var name = document.createElement('div');
+        name.className = 'card-name';
+        name.textContent = proj.name;
+        name.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openDetail(proj);
+        });
+        card.appendChild(name);
+
+        /* Description */
+        if (proj.description) {
+            var desc = document.createElement('div');
+            desc.className = 'card-description';
+            desc.textContent = proj.description;
+            card.appendChild(desc);
+        }
+
+        /* Badges */
+        var badges = document.createElement('div');
+        badges.className = 'card-badges';
+
+        if (proj.tier) {
+            var tierBadge = document.createElement('span');
+            tierBadge.className = 'badge ' + (TIER_CLASSES[proj.tier] || 'badge-t3');
+            tierBadge.textContent = 'T' + proj.tier;
+            badges.appendChild(tierBadge);
+        }
+
+        if (proj.track) {
+            var trackBadge = document.createElement('span');
+            trackBadge.className = 'badge badge-track';
+            trackBadge.textContent = proj.track;
+            badges.appendChild(trackBadge);
+        }
+
+        if (proj.active_agent && proj.active_agent !== 'none') {
+            var agentBadge = document.createElement('span');
+            agentBadge.className = 'badge badge-agent';
+            agentBadge.textContent = '\u25CF ' + proj.active_agent;
+            badges.appendChild(agentBadge);
+        }
+
+        card.appendChild(badges);
+
+        /* Tags */
+        if (proj.tags && proj.tags.length > 0) {
+            var tagsEl = document.createElement('div');
+            tagsEl.className = 'card-tags';
+            var shown = proj.tags.slice(0, MAX_TAGS);
+            shown.forEach(function (t) {
+                var tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = t;
+                tagsEl.appendChild(tag);
+            });
+            if (proj.tags.length > MAX_TAGS) {
+                var more = document.createElement('span');
+                more.className = 'tag';
+                more.textContent = '+' + (proj.tags.length - MAX_TAGS);
+                tagsEl.appendChild(more);
+            }
+            card.appendChild(tagsEl);
+        }
+
+        /* Footer */
+        var footer = document.createElement('div');
+        footer.className = 'card-footer';
+
+        var dateSpan = document.createElement('span');
+        dateSpan.textContent = formatDate(proj.updated || proj.created);
+        footer.appendChild(dateSpan);
+
+        if (proj.repo) {
+            var repoLink = document.createElement('a');
+            repoLink.href = proj.repo;
+            repoLink.target = '_blank';
+            repoLink.rel = 'noopener';
+            repoLink.className = 'repo-icon';
+            repoLink.innerHTML =
+                '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>' +
+                '<span>repo</span>';
+            footer.appendChild(repoLink);
+        }
+
+        card.appendChild(footer);
+        return card;
+    }
+
+    /* ── Drag & Drop ── */
+    function handleDragStart(e) {
+        dragSlug = e.currentTarget.dataset.slug;
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragSlug);
+    }
+
+    function handleDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        dragSlug = null;
+        document.querySelectorAll('.column-body').forEach(function (b) {
+            b.classList.remove('drag-over');
+        });
+        document.querySelectorAll('.card-drop-indicator').forEach(function (el) {
+            el.remove();
+        });
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        var body = e.currentTarget;
+        body.classList.add('drag-over');
+
+        /* Show drop indicator */
+        document.querySelectorAll('.card-drop-indicator').forEach(function (el) { el.remove(); });
+        var indicator = document.createElement('div');
+        indicator.className = 'card-drop-indicator';
+
+        var afterCard = getCardAfterDrag(body, e.clientY);
+        if (afterCard) {
+            body.insertBefore(indicator, afterCard);
+        } else {
+            body.appendChild(indicator);
+        }
+    }
+
+    function handleDragLeave(e) {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.querySelectorAll('.card-drop-indicator').forEach(function (el) { el.remove(); });
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        var body = e.currentTarget;
+        body.classList.remove('drag-over');
+        body.querySelectorAll('.card-drop-indicator').forEach(function (el) { el.remove(); });
+
+        var slug = e.dataTransfer.getData('text/plain');
+        var newStatus = body.dataset.status;
+
+        var proj = projects.find(function (p) { return p.slug === slug; });
+        if (!proj) return;
+
+        var oldStatus = effectiveStatus(proj);
+        if (oldStatus === newStatus) return;
+
+        overrides[slug] = newStatus;
+        saveOverrides(overrides);
+        render();
+        showToast(proj.name, newStatus, slug);
+    }
+
+    function getCardAfterDrag(body, y) {
+        var cards = Array.from(body.querySelectorAll('.card:not(.dragging)'));
+        var result = null;
+        var closest = Number.NEGATIVE_INFINITY;
+        cards.forEach(function (card) {
+            var box = card.getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest) {
+                closest = offset;
+                result = card;
+            }
+        });
+        return result;
+    }
+
+    /* ── Toast ── */
+    function showToast(projectName, newStatus, slug) {
+        var container = document.getElementById('toast-container');
+
+        var toast = document.createElement('div');
+        toast.className = 'toast';
+
+        var text = document.createElement('div');
+        text.className = 'toast-text';
+        text.innerHTML = 'Moved <strong>' + escapeHtml(projectName) + '</strong> to <strong>' + escapeHtml(newStatus) + '</strong>. Update project.yaml to persist.';
+        toast.appendChild(text);
+
+        var actions = document.createElement('div');
+        actions.className = 'toast-actions';
+
+        var copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-copy-yaml';
+        copyBtn.textContent = 'Copy YAML';
+        copyBtn.addEventListener('click', function () {
+            var yaml = slug + ':\n  status: ' + newStatus;
+            navigator.clipboard.writeText(yaml).then(function () {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(function () { copyBtn.textContent = 'Copy YAML'; }, 1500);
+            });
+        });
+        actions.appendChild(copyBtn);
+
+        var dismissBtn = document.createElement('button');
+        dismissBtn.className = 'btn-dismiss';
+        dismissBtn.textContent = 'Dismiss';
+        dismissBtn.addEventListener('click', function () {
+            toast.remove();
+        });
+        actions.appendChild(dismissBtn);
+
+        toast.appendChild(actions);
+        container.appendChild(toast);
+
+        setTimeout(function () {
+            if (toast.parentNode) toast.remove();
+        }, 8000);
+    }
+
+    /* ── Detail Panel ── */
+    function openDetail(proj) {
+        var panel = document.getElementById('detail-panel');
+        var overlay = document.getElementById('overlay');
+        var content = document.getElementById('detail-content');
+
+        var status = effectiveStatus(proj);
+        var color = STATUS_COLORS[status] || '#8b949e';
+
+        var html = '';
+
+        html += '<div class="detail-name">' + escapeHtml(proj.name) + '</div>';
+        html += '<div class="detail-status" style="color:' + color + '">' +
+                '<span class="column-dot" style="background:' + color + ';box-shadow:0 0 6px ' + color + '"></span>' +
+                escapeHtml(status) + '</div>';
+
+        /* Description */
+        if (proj.description) {
+            html += '<div class="detail-section">' +
+                    '<div class="detail-section-title">Description</div>' +
+                    '<div class="detail-description">' + escapeHtml(proj.description) + '</div>' +
+                    '</div>';
+        }
+
+        /* Badges row */
+        html += '<div class="detail-section"><div class="card-badges">';
+        if (proj.tier) {
+            html += '<span class="badge ' + (TIER_CLASSES[proj.tier] || 'badge-t3') + '">T' + proj.tier + '</span>';
+        }
+        if (proj.track) {
+            html += '<span class="badge badge-track">' + escapeHtml(proj.track) + '</span>';
+        }
+        if (proj.active_agent && proj.active_agent !== 'none') {
+            html += '<span class="badge badge-agent">\u25CF ' + escapeHtml(proj.active_agent) + '</span>';
+        }
+        html += '</div></div>';
+
+        /* Tags */
+        if (proj.tags && proj.tags.length > 0) {
+            html += '<div class="detail-section">' +
+                    '<div class="detail-section-title">Tags</div>' +
+                    '<div class="detail-tags">';
+            proj.tags.forEach(function (t) {
+                html += '<span class="detail-tag">' + escapeHtml(t) + '</span>';
+            });
+            html += '</div></div>';
+        }
+
+        /* Repo */
+        if (proj.repo) {
+            html += '<div class="detail-section">' +
+                    '<div class="detail-section-title">Repository</div>' +
+                    '<a class="detail-link" href="' + escapeHtml(proj.repo) + '" target="_blank" rel="noopener">' + escapeHtml(proj.repo) + '</a>' +
+                    '</div>';
+        }
+
+        /* Key Dependencies */
+        if (proj.key_dependencies && proj.key_dependencies.length > 0) {
+            html += '<div class="detail-section">' +
+                    '<div class="detail-section-title">Key Dependencies</div>';
+            proj.key_dependencies.forEach(function (dep) {
+                html += '<div class="detail-dep">' +
+                        '<div class="detail-dep-name">' + escapeHtml(dep.name) + '</div>' +
+                        '<div class="detail-dep-status">Status: ' + escapeHtml(dep.status) +
+                        (dep.owner ? ' \u00B7 Owner: ' + escapeHtml(dep.owner) : '') + '</div>';
+                if (dep.blocking && dep.blocking.length > 0) {
+                    html += '<div class="detail-dep-blocking">Blocking: ' + dep.blocking.map(escapeHtml).join(', ') + '</div>';
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+
+        /* Relationships */
+        if (proj.relationships) {
+            var rel = proj.relationships;
+            html += '<div class="detail-section">' +
+                    '<div class="detail-section-title">Relationships</div>';
+
+            if (rel.ecosystem) {
+                html += '<div class="detail-rel"><strong>Ecosystem:</strong> ' + escapeHtml(rel.ecosystem) +
+                        (rel.role ? ' (' + escapeHtml(rel.role) + ')' : '') + '</div>';
+            }
+            if (rel.consumes && rel.consumes.length > 0) {
+                rel.consumes.forEach(function (c) {
+                    html += '<div class="detail-rel"><strong>Consumes from ' + escapeHtml(c.slug) + ':</strong> ' + escapeHtml(c.data) + '</div>';
+                });
+            }
+            if (rel.produces && rel.produces.length > 0) {
+                rel.produces.forEach(function (p) {
+                    html += '<div class="detail-rel"><strong>Produces for ' + escapeHtml(p.slug) + ':</strong> ' + escapeHtml(p.data) + '</div>';
+                });
+            }
+            if (rel.writeback && rel.writeback.length > 0) {
+                rel.writeback.forEach(function (w) {
+                    html += '<div class="detail-rel"><strong>Writes back to ' + escapeHtml(w.target) + ':</strong> ' + escapeHtml(w.data) + '</div>';
+                });
+            }
+            html += '</div>';
+        }
+
+        /* Planning Artifacts */
+        if (proj.planning) {
+            var plan = proj.planning;
+            var artifacts = plan.artifacts || plan.phase_contexts || [];
+            if (plan.handoff) artifacts = [plan.handoff].concat(artifacts);
+            if (plan.risks) artifacts.push(plan.risks);
+            if (plan.market_research) artifacts.push(plan.market_research);
+
+            if (artifacts.length > 0) {
+                html += '<div class="detail-section">' +
+                        '<div class="detail-section-title">Planning Artifacts</div>';
+                artifacts.forEach(function (a) {
+                    html += '<div class="detail-artifact">' + escapeHtml(a) + '</div>';
+                });
+                html += '</div>';
+            }
+        }
+
+        /* Architecture link for KIRT */
+        if (proj.slug === 'kirt') {
+            html += '<div class="detail-section">' +
+                    '<a class="detail-arch-link" href="projects/kirt/architecture.html">' +
+                    '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75V13.5h13.05a.75.75 0 010 1.5H.75a.75.75 0 01-.75-.75V1.75a.75.75 0 011.5 0zm14.28 2.53l-5.25 5.25a.75.75 0 01-1.06 0L7 7.06 3.28 10.78a.75.75 0 01-1.06-1.06l4.25-4.25a.75.75 0 011.06 0L10 7.94l4.72-4.72a.75.75 0 011.06 1.06z"/></svg>' +
+                    'View Architecture Diagram</a>' +
+                    '</div>';
+        }
+
+        /* Dates */
+        html += '<div class="detail-section">' +
+                '<div class="detail-section-title">Timeline</div>' +
+                '<div class="detail-rel">Created: ' + escapeHtml(proj.created || 'N/A') + '</div>' +
+                '<div class="detail-rel">Updated: ' + escapeHtml(proj.updated || proj.created || 'N/A') + '</div>' +
+                '</div>';
+
+        content.innerHTML = html;
+        panel.classList.add('active');
+        overlay.classList.add('active');
+    }
+
+    function closeDetail() {
+        document.getElementById('detail-panel').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+    }
+
+    /* ── Init ── */
+    document.getElementById('detail-close').addEventListener('click', closeDetail);
+    document.getElementById('overlay').addEventListener('click', closeDetail);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDetail();
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function () {
+        localStorage.removeItem(LS_KEY);
+        overrides = {};
+        render();
+    });
+
+    fetch('projects.json')
+        .then(function (res) {
+            if (!res.ok) throw new Error('Failed to load projects.json');
+            return res.json();
+        })
+        .then(function (data) {
+            projects = data;
+            overrides = loadOverrides();
+            render();
+        })
+        .catch(function (err) {
+            document.getElementById('board').innerHTML =
+                '<div style="padding:3rem;color:#f85149;font-size:0.9rem;">' +
+                'Error loading projects: ' + escapeHtml(err.message) +
+                '<br><br><span style="color:#8b949e;">Ensure projects.json is in the same directory and served via HTTP (not file://).</span></div>';
+        });
+})();
+</script>
+
+</body>
+</html>
